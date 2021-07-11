@@ -4,6 +4,9 @@ import android.content.Context;
 
 import androidx.annotation.Nullable;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -15,9 +18,6 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 public class MQTT {
 
@@ -44,10 +44,9 @@ public class MQTT {
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
                 System.out.println("msg "+message.toString());
-                if(listeners.containsKey(topic))
-                    for(MessageCallback cb : listeners.get(topic)){
-                        cb.handle(topic, message);
-                    }
+                for(MessageCallback cb : listeners.get(topic)){
+                    cb.handle(topic, message);
+                }
             }
 
             @Override
@@ -78,20 +77,17 @@ public class MQTT {
     }
 
     public void addListener(String topic, MessageCallback cb){
-        if(!listeners.containsKey(topic))
-            listeners.put(topic, new ArrayList<>());
-        listeners.get(topic).add(cb);
+        listeners.put(topic, cb);
     }
 
     public void removeListener(String topic, MessageCallback cb){
-        if(!listeners.containsKey(topic))
-            return;
-        listeners.get(topic).remove(cb);
+        listeners.remove(topic, cb);
     }
 
     public void subscribe(String topic, int qos, @Nullable IMqttActionListener listener){
-        if(client == null)
+        if(client == null || !client.isConnected()) {
             throw new RuntimeException("No connection");
+        }
 
         IMqttToken subToken = null;
         try {
@@ -129,8 +125,27 @@ public class MQTT {
         unsubscribe(topic, null);
     }
 
-    private final String server, name, pass;
+    private final String server;
+    private final String name;
+
+    public String getServer() {
+        return server;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getPass() {
+        return pass;
+    }
+
+    public boolean isConnected(){
+        return client != null && client.isConnected();
+    }
+
+    private final String pass;
     private MqttAndroidClient client;
-    private final Map<String, Collection<MessageCallback>> listeners = new HashMap<>();
+    private final Multimap<String, MessageCallback> listeners = ArrayListMultimap.create();
 
 }

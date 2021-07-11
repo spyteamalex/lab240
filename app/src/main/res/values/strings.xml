@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">lab240</string>
+    <string name="server">"tcp://mqtt.lab240.ru:1883"</string>
 </resources>
