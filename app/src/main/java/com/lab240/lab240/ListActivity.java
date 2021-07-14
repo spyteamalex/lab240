@@ -1,20 +1,19 @@
 package com.lab240.lab240;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.RecyclerView;
-
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.common.collect.ArrayListMultimap;
@@ -49,7 +48,6 @@ public class ListActivity extends AppCompatActivity {
 
         @Override
         public int getItemCount() {
-            System.out.println(groups.size());
             return groups.size();
         }
 
@@ -82,11 +80,11 @@ public class ListActivity extends AppCompatActivity {
             if(wrapped){
                 divider.setVisibility(View.GONE);
                 dashboards.setVisibility(View.GONE);
-                name.setText(String.format(Locale.getDefault(), "%s(%d)", group, adapter.getItemCount()));
+                name.setText(String.format(Locale.getDefault(), "▲ %s (%d)", group, adapter.getItemCount()));
             }else {
                 divider.setVisibility(View.VISIBLE);
                 dashboards.setVisibility(View.VISIBLE);
-                name.setText(group);
+                name.setText(String.format(Locale.getDefault(), "▼ %s", group, adapter.getItemCount()));
             }
         }
 
@@ -100,9 +98,36 @@ public class ListActivity extends AppCompatActivity {
             divider = itemView.findViewById(R.id.divider);
             name = itemView.findViewById(R.id.name);
 
-            name.setOnClickListener(v->{
+            itemView.setOnClickListener(v->{
                 setWrapped(!wrapped);
             });
+
+
+            itemView.setOnLongClickListener(view -> {
+                AlertSheetDialog asd = new AlertSheetDialog(ListActivity.this);
+                asd.addButton("Переименовать", ()->{
+                    AlertSheetDialog asd2 = new AlertSheetDialog(ListActivity.this);
+                    EditText gr = asd2.addEditText("Название");
+                    gr.setSingleLine(true);
+                    gr.setText(group);
+                    asd2.addButton("Переименовать", () -> {
+                        for(Dashboard db : adapter.dashboards)
+                            db.setGroup(gr.getText().toString());
+                        ga.setData(Lab240.getDashboards().values());
+                        Lab240.saveDashboards(ListActivity.this, Lab240.getDashboards());
+                    }, AlertSheetDialog.DEFAULT);
+                    asd2.show();
+                }, AlertSheetDialog.DEFAULT);
+                asd.addButton("Удалить", ()->{
+                    for(Dashboard i : adapter.dashboards)
+                        Lab240.getDashboards().remove(i.getId());
+                    ga.setData(Lab240.getDashboards().values());
+                    Lab240.saveDashboards(ListActivity.this, Lab240.getDashboards());
+                }, AlertSheetDialog.DESTROY);
+                asd.show();
+                return false;
+            });
+
         }
     }
 
@@ -148,6 +173,11 @@ public class ListActivity extends AppCompatActivity {
         public DashboardHolder(@NonNull View itemView) {
             super(itemView);
             name = itemView.findViewById(R.id.name);
+            itemView.setOnClickListener(view -> {
+                Intent intent = new Intent(ListActivity.this, DashboardActivity.class);
+                intent.putExtra(DashboardActivity.DASHBOARD, item.getId());
+                startActivity(intent);
+            });
             itemView.setOnLongClickListener(view -> {
                 AlertSheetDialog asd = new AlertSheetDialog(ListActivity.this);
                 asd.addButton("Переименовать", ()->{
@@ -157,7 +187,8 @@ public class ListActivity extends AppCompatActivity {
                     name.setText(item.getName());
                     Button doneButton = asd2.addButton("Переименовать", () -> {
                         item.setName(name.getText().toString());
-                        ga.setData(Lab240.getDashboards());
+                        ga.setData(Lab240.getDashboards().values());
+                        Lab240.saveDashboards(ListActivity.this, Lab240.getDashboards());
                     }, AlertSheetDialog.DEFAULT);
                     name.addTextChangedListener(new TextWatcher() {
                         @Override
@@ -180,13 +211,15 @@ public class ListActivity extends AppCompatActivity {
                     group.setText(item.getGroup());
                     asd2.addButton("Переместить", ()-> {
                         item.setGroup(group.getText().toString());
-                        ga.setData(Lab240.getDashboards());
+                        ga.setData(Lab240.getDashboards().values());
+                        Lab240.saveDashboards(ListActivity.this, Lab240.getDashboards());
                     }, AlertSheetDialog.DEFAULT);
                     asd2.show();
                 }, AlertSheetDialog.DEFAULT);
                 asd.addButton("Удалить", ()->{
                     Lab240.getDashboards().remove(item);
-                    ga.setData(Lab240.getDashboards());
+                    ga.setData(Lab240.getDashboards().values());
+                    Lab240.saveDashboards(ListActivity.this, Lab240.getDashboards());
                 }, AlertSheetDialog.DESTROY);
                 asd.show();
                 return false;
@@ -206,7 +239,7 @@ public class ListActivity extends AppCompatActivity {
         RecyclerView rv = findViewById(R.id.groups);
         ga = new GroupAdapter();
         rv.setAdapter(ga);
-        ga.setData(Lab240.getDashboards());
+        ga.setData(Lab240.getDashboards().values());
 
         addButton = findViewById(R.id.addButton);
         addButton.setOnClickListener(this::addDashboard);
@@ -220,8 +253,10 @@ public class ListActivity extends AppCompatActivity {
         EditText group = asd2.addEditText("Группа");
         group.setSingleLine(true);
         Button doneButton = asd2.addButton("Создать", () -> {
-            Lab240.getDashboards().add(new Dashboard(name.getText().toString(), System.currentTimeMillis(), group.getText().toString()));
-            ga.setData(Lab240.getDashboards());
+            long id = System.currentTimeMillis();
+            Lab240.getDashboards().put(id, new Dashboard(name.getText().toString(), id, group.getText().toString()));
+            ga.setData(Lab240.getDashboards().values());
+            Lab240.saveDashboards(ListActivity.this, Lab240.getDashboards());
         }, AlertSheetDialog.DEFAULT);
         name.addTextChangedListener(new TextWatcher() {
             @Override
@@ -236,11 +271,5 @@ public class ListActivity extends AppCompatActivity {
             }
         });
         asd2.show();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        Lab240.saveDashboards(this, Lab240.getDashboards());
     }
 }

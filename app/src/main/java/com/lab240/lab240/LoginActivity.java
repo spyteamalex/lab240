@@ -23,6 +23,7 @@ import org.eclipse.paho.client.mqttv3.IMqttToken;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -55,10 +56,10 @@ public class LoginActivity extends AppCompatActivity {
 
 
     protected void next(View v){
-        check(name.getText().toString(), pass.getText().toString(), Collections.emptyList());
+        check(name.getText().toString(), pass.getText().toString(), Collections.emptyMap());
     }
 
-    protected void check(String name, String pass, List<Dashboard> dashboards){
+    protected void check(String name, String pass, Map<Long, Dashboard> dashboards){
         loginLayout.setVisibility(View.GONE);
         progressBar.setVisibility(View.VISIBLE);
 
@@ -68,8 +69,7 @@ public class LoginActivity extends AppCompatActivity {
             public void onSuccess(IMqttToken asyncActionToken) {
                 Lab240.setMqtt(mqtt);
                 Lab240.getDashboards().clear();
-                Lab240.getDashboards().addAll(dashboards);
-
+                Lab240.getDashboards().putAll(dashboards);
 
                 Lab240.saveConfig(LoginActivity.this, new Lab240.Config(name, pass, dashboards));
                 Intent i = new Intent(LoginActivity.this, ListActivity.class);

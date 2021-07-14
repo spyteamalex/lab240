@@ -15,12 +15,7 @@
         android:id="@+id/name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="5dp"
-        android:layout_marginLeft="5dp"
-        android:layout_marginTop="5dp"
-        android:layout_marginEnd="5dp"
-        android:layout_marginRight="5dp"
-        android:gravity="center"
+        android:padding="5dp"
         android:singleLine="true"
         android:text="TextView"
         android:textSize="12sp"
@@ -31,7 +26,6 @@
     <View
         android:id="@+id/divider"
         style="@style/Divider"
-        android:layout_marginTop="5dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/name" />

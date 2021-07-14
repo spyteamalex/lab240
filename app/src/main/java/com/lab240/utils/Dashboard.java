@@ -1,6 +1,9 @@
 package com.lab240.utils;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class Dashboard {
 
@@ -29,6 +32,12 @@ public class Dashboard {
     private String name;
     private String group;
     private final long id;
+
+    public Map<Long, Item> getItems() {
+        return items;
+    }
+
+    private final Map<Long, Item> items = new TreeMap<>();
 
     public Dashboard(String name, long id, String group) {
         this.name = name;

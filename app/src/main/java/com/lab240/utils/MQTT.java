@@ -18,6 +18,8 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 public class MQTT {
 
@@ -43,7 +45,6 @@ public class MQTT {
 
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
-                System.out.println("msg "+message.toString());
                 for(MessageCallback cb : listeners.get(topic)){
                     cb.handle(topic, message);
                 }
@@ -80,8 +81,16 @@ public class MQTT {
         listeners.put(topic, cb);
     }
 
+    public void addListeners(String topic, Collection<MessageCallback> cb){
+        listeners.putAll(topic, cb);
+    }
+
     public void removeListener(String topic, MessageCallback cb){
         listeners.remove(topic, cb);
+    }
+
+    public void removeListeners(String topic, Collection<MessageCallback> cb){
+        listeners.get(topic).removeAll(cb);
     }
 
     public void subscribe(String topic, int qos, @Nullable IMqttActionListener listener){
