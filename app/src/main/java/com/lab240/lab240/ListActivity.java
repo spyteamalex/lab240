@@ -1,10 +1,14 @@
 package com.lab240.lab240;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -15,11 +19,10 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.lab240.utils.AlertSheetDialog;
-import com.lab240.utils.Dashboard;
+import com.lab240.Items.Dashboard;
 import com.lab240.utils.Lab240;
 
 import java.util.ArrayList;
@@ -104,6 +107,8 @@ public class ListActivity extends AppCompatActivity {
 
 
             itemView.setOnLongClickListener(view -> {
+                Vibrator v = (Vibrator) ListActivity.this.getSystemService(Context.VIBRATOR_SERVICE);
+                v.vibrate(25);
                 AlertSheetDialog asd = new AlertSheetDialog(ListActivity.this);
                 asd.addButton("Переименовать", ()->{
                     AlertSheetDialog asd2 = new AlertSheetDialog(ListActivity.this);
@@ -179,6 +184,9 @@ public class ListActivity extends AppCompatActivity {
                 startActivity(intent);
             });
             itemView.setOnLongClickListener(view -> {
+                Vibrator v = (Vibrator) ListActivity.this.getSystemService(Context.VIBRATOR_SERVICE);
+                v.vibrate(25);
+
                 AlertSheetDialog asd = new AlertSheetDialog(ListActivity.this);
                 asd.addButton("Переименовать", ()->{
                     AlertSheetDialog asd2 = new AlertSheetDialog(ListActivity.this);
@@ -228,7 +236,7 @@ public class ListActivity extends AppCompatActivity {
     }
 
     GroupAdapter ga;
-    FloatingActionButton addButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -240,12 +248,25 @@ public class ListActivity extends AppCompatActivity {
         ga = new GroupAdapter();
         rv.setAdapter(ga);
         ga.setData(Lab240.getDashboards().values());
-
-        addButton = findViewById(R.id.addButton);
-        addButton.setOnClickListener(this::addDashboard);
     }
 
-    public void addDashboard(View v){
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.list_activity_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.add:
+                addDashboard();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    public void addDashboard(){
         AlertSheetDialog asd2 = new AlertSheetDialog(ListActivity.this);
         EditText name = asd2.addEditText("Название");
         name.setSingleLine(true);

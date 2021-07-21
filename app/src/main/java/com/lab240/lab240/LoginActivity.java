@@ -4,17 +4,14 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.Layout;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import com.google.common.base.Optional;
-import com.lab240.utils.Dashboard;
+import com.lab240.Items.Dashboard;
 import com.lab240.utils.Lab240;
 import com.lab240.utils.MQTT;
 
@@ -22,7 +19,6 @@ import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity {
@@ -74,6 +70,7 @@ public class LoginActivity extends AppCompatActivity {
                 Lab240.saveConfig(LoginActivity.this, new Lab240.Config(name, pass, dashboards));
                 Intent i = new Intent(LoginActivity.this, ListActivity.class);
                 startActivity(i);
+                finish();
             }
 
             @Override

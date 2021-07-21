@@ -4,13 +4,14 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.google.common.base.Optional;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import com.lab240.Items.Dashboard;
+import com.lab240.Items.Item;
+import com.lab240.Items.ItemSerializer;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -86,65 +87,12 @@ public class Lab240 {
     }
 
     public static Map<Long, Dashboard> deserializeDashboards(String s){
-        JSONObject jsonObject;
-        try {
-            jsonObject = new JSONObject(s);
-        } catch (JSONException e) {
-            e.printStackTrace();
-            return Collections.emptyMap();
-        }
-        Map<Long, Dashboard> list = new TreeMap<>();
-        for (Iterator<String> it = jsonObject.keys(); it.hasNext(); ) {
-            String i = it.next();
-            try {
-                JSONObject dashboard = jsonObject.getJSONObject(i);
-                Dashboard db = new Dashboard(dashboard.getString(DASHBOARD_NAME), dashboard.getLong(DASHBOARD_ID), dashboard.getString(DASHBOARD_GROUP));
-                list.put(db.getId(), db);
-
-                JSONObject items = dashboard.getJSONObject(DASHBOARD_ITEMS);
-                for (Iterator<String> iter = items.keys(); iter.hasNext(); ) {
-                    String j = iter.next();
-                    try {
-                        JSONObject itemJO = items.getJSONObject(j);
-                        Item item = new Item(itemJO.getLong(ITEM_ID), itemJO.getString(ITEM_NAME), itemJO.getString(ITEM_TOPIC));
-                        db.getItems().put(item.getId(), item);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-        return list;
+        Gson gson = new GsonBuilder().registerTypeAdapter(Item.class, new ItemSerializer()).create();
+        return gson.fromJson(s, new TypeToken<TreeMap<Long, Dashboard>>(){}.getType());
     }
 
     public static String serializeDashboards(Map<Long, Dashboard> dashboards){
-        JSONObject arr = new JSONObject();
-        for(Map.Entry<Long, Dashboard> dbPair : dashboards.entrySet()){
-            try {
-                Dashboard db = dbPair.getValue();
-                JSONObject dbJson = new JSONObject();
-                dbJson
-                        .put(DASHBOARD_GROUP, db.getGroup())
-                        .put(DASHBOARD_ID, db.getId())
-                        .put(DASHBOARD_NAME, db.getName());
-
-                JSONObject items = new JSONObject();
-                for(Item i : db.getItems().values()){
-                    JSONObject item = new JSONObject();
-                    item
-                            .put(ITEM_TOPIC, i.getTopic())
-                            .put(ITEM_NAME, i.getName())
-                            .put(ITEM_ID, i.getId());
-                    items.put(String.valueOf(i.getId()), item);
-                }
-                dbJson.put(DASHBOARD_ITEMS, items);
-                arr.put(String.valueOf(dbPair.getKey()), dbJson);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-        return arr.toString();
+        Gson gson = new GsonBuilder().registerTypeAdapter(Item.class, new ItemSerializer()).create();
+        return gson.toJson(dashboards);
     }
 }

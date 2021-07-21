@@ -10,17 +10,12 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.view.animation.Interpolator;
+import android.view.animation.AccelerateDecelerateInterpolator;
 
 import androidx.annotation.Nullable;
 
 import com.lab240.lab240.R;
 import com.lab240.utils.CanvasUtil;
-
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class RingIndicatorView extends View {
     public RingIndicatorView(Context context) {
@@ -50,11 +45,11 @@ public class RingIndicatorView extends View {
         }
     }
 
-    private static int minAngle = -35;
-    private static int maxAngle = 180-minAngle;
-    private static float innerRadiusToSize = 0.35f;
-    private static float outerRadiusToSize = 0.45f;
-    private static float textToSize = 0.5f*2f*innerRadiusToSize;
+    private final static int minAngle = -35;
+    private final static int maxAngle = 180-minAngle;
+    private final static float innerRadiusToSize = 0.35f;
+    private final static float outerRadiusToSize = 0.5f;
+    private final static float textToSize = 0.5f*2f*innerRadiusToSize;
 
     public String getText() {
         return text;
@@ -83,7 +78,7 @@ public class RingIndicatorView extends View {
         this.targetFullness = Math.min(1, Math.max(fullness, 0));
         if(animate){
             ObjectAnimator animation = ObjectAnimator.ofFloat(this, "drawnFullness", old, targetFullness);
-            animation.setInterpolator((Interpolator) v -> v);
+            animation.setInterpolator(new AccelerateDecelerateInterpolator());
             if(listener != null)
                 animation.addUpdateListener(listener);
             animation.setDuration(200);

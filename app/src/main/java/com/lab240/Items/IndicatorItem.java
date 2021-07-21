@@ -1,6 +1,12 @@
-package com.lab240.utils;
+package com.lab240.Items;
 
-public class Item {
+public abstract class IndicatorItem extends Item{
+    protected IndicatorItem(long id, String name, String topic) {
+        super(id);
+        this.name = name;
+        this.topic = topic;
+    }
+
     public String getTopic() {
         return topic;
     }
@@ -21,16 +27,4 @@ public class Item {
 
     private String name;
     private String topic;
-
-    public long getId() {
-        return id;
-    }
-
-    public Item(long id, String name, String topic) {
-        this.name = name;
-        this.topic = topic;
-        this.id = id;
-    }
-
-    private final long id;
 }

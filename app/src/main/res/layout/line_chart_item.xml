@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <TextView
+        <com.jjoe64.graphview.GraphView
             android:id="@+id/indicator"
             android:layout_width="0dp"
             android:layout_height="0dp"
@@ -21,7 +21,6 @@
             android:layout_marginRight="10dp"
             android:layout_marginBottom="5dp"
             android:gravity="center"
-            android:text="500 ms"
             android:textColor="@color/text_color"
             app:autoSizeStepGranularity="2sp"
             app:autoSizeTextType="uniform"
