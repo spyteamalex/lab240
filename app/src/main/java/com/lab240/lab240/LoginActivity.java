@@ -1,7 +1,5 @@
 package com.lab240.lab240;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -10,8 +8,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.google.common.base.Optional;
-import com.lab240.Items.Dashboard;
+import com.lab240.devices.Device;
 import com.lab240.utils.Lab240;
 import com.lab240.utils.MQTT;
 
@@ -19,7 +19,7 @@ import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 
 import java.util.Collections;
-import java.util.Map;
+import java.util.List;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -43,7 +43,7 @@ public class LoginActivity extends AppCompatActivity {
         Optional<Lab240.Config> config = Lab240.getConfig(this);
         Lab240.Config conf;
         if((conf = config.orNull()) != null){
-            check(conf.name, conf.pass, conf.dashboards);
+            check(conf.name, conf.pass, conf.devices);
         }else{
             loginLayout.setVisibility(View.VISIBLE);
             progressBar.setVisibility(View.GONE);
@@ -52,10 +52,10 @@ public class LoginActivity extends AppCompatActivity {
 
 
     protected void next(View v){
-        check(name.getText().toString(), pass.getText().toString(), Collections.emptyMap());
+        check(name.getText().toString(), pass.getText().toString(), Collections.emptyList());
     }
 
-    protected void check(String name, String pass, Map<Long, Dashboard> dashboards){
+    protected void check(String name, String pass, List<Device> devices){
         loginLayout.setVisibility(View.GONE);
         progressBar.setVisibility(View.VISIBLE);
 
@@ -64,10 +64,10 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onSuccess(IMqttToken asyncActionToken) {
                 Lab240.setMqtt(mqtt);
-                Lab240.getDashboards().clear();
-                Lab240.getDashboards().putAll(dashboards);
+                Lab240.getDevices().clear();
+                Lab240.getDevices().addAll(devices);
 
-                Lab240.saveConfig(LoginActivity.this, new Lab240.Config(name, pass, dashboards));
+                Lab240.saveConfig(LoginActivity.this, new Lab240.Config(name, pass, devices));
                 Intent i = new Intent(LoginActivity.this, ListActivity.class);
                 startActivity(i);
                 finish();

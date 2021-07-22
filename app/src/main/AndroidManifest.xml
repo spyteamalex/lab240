@@ -16,9 +16,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Lab240">
         <activity
-            android:name=".DashboardActivity"
-            android:configChanges="orientation|screenSize" />
-        <activity
             android:name=".ListActivity"
             android:configChanges="orientation|screenSize" />
         <activity

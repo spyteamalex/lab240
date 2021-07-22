@@ -10,7 +10,8 @@
 
     <color name="text_color">#FF000000</color>
     <color name="secondary_text_color">#7C7C7C</color>
-    <color name="main">#FFFFFFFF</color>
+    <color name="primary">#FFFFFFFF</color>
+    <color name="secondary">#F2F3F7</color>
     <color name="highlighted">#44A9FF</color>
-    <color name="dialog_background">#CCCCCC</color>
+    <color name="tririchny">#CCCCCC</color>
 </resources>

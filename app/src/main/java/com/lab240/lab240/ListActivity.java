@@ -1,239 +1,41 @@
 package com.lab240.lab240;
 
-import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
-import android.os.Vibrator;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.LayoutInflater;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
+import com.lab240.devices.Device;
+import com.lab240.devices.Devices;
+import com.lab240.devices.Out;
+import com.lab240.lab240.adapters.GroupAdapter;
 import com.lab240.utils.AlertSheetDialog;
-import com.lab240.Items.Dashboard;
+import com.lab240.utils.Container;
 import com.lab240.utils.Lab240;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class ListActivity extends AppCompatActivity {
-
-    public class GroupAdapter extends RecyclerView.Adapter<GroupHolder>{
-
-        @NonNull
-        @Override
-        public GroupHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new GroupHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_group, parent, false));
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull GroupHolder holder, int position) {
-            String g = groups.get(position);
-            holder.group = g;
-            holder.adapter.setData(dashboards.get(g));
-            holder.setWrapped(holder.wrapped);
-        }
-
-        @Override
-        public int getItemCount() {
-            return groups.size();
-        }
-
-        private final Multimap<String, Dashboard> dashboards = ArrayListMultimap.create();
-        private final List<String> groups = new ArrayList<>();
-
-        public void setData(Collection<Dashboard> data){
-            groups.clear();
-            dashboards.clear();
-            for (Dashboard d: data) {
-                dashboards.put(d.getGroup(), d);
-            }
-            groups.addAll(dashboards.keySet());
-            Collections.sort(groups);
-            notifyDataSetChanged();
-        }
-    }
-
-    public class GroupHolder extends RecyclerView.ViewHolder{
-
-        final RecyclerView dashboards;
-        final TextView name;
-        final DashboardAdapter adapter;
-        final View divider;
-        String group;
-        private boolean wrapped = true;
-
-        public void setWrapped(boolean b){
-            wrapped = b;
-            if(wrapped){
-                divider.setVisibility(View.GONE);
-                dashboards.setVisibility(View.GONE);
-                name.setText(String.format(Locale.getDefault(), "▲ %s (%d)", group, adapter.getItemCount()));
-            }else {
-                divider.setVisibility(View.VISIBLE);
-                dashboards.setVisibility(View.VISIBLE);
-                name.setText(String.format(Locale.getDefault(), "▼ %s", group, adapter.getItemCount()));
-            }
-        }
-
-
-        public GroupHolder(@NonNull View itemView) {
-            super(itemView);
-            dashboards = itemView.findViewById(R.id.dashboards);
-            adapter = new DashboardAdapter();
-            dashboards.setAdapter(adapter);
-
-            divider = itemView.findViewById(R.id.divider);
-            name = itemView.findViewById(R.id.name);
-
-            itemView.setOnClickListener(v->{
-                setWrapped(!wrapped);
-            });
-
-
-            itemView.setOnLongClickListener(view -> {
-                Vibrator v = (Vibrator) ListActivity.this.getSystemService(Context.VIBRATOR_SERVICE);
-                v.vibrate(25);
-                AlertSheetDialog asd = new AlertSheetDialog(ListActivity.this);
-                asd.addButton("Переименовать", ()->{
-                    AlertSheetDialog asd2 = new AlertSheetDialog(ListActivity.this);
-                    EditText gr = asd2.addEditText("Название");
-                    gr.setSingleLine(true);
-                    gr.setText(group);
-                    asd2.addButton("Переименовать", () -> {
-                        for(Dashboard db : adapter.dashboards)
-                            db.setGroup(gr.getText().toString());
-                        ga.setData(Lab240.getDashboards().values());
-                        Lab240.saveDashboards(ListActivity.this, Lab240.getDashboards());
-                    }, AlertSheetDialog.DEFAULT);
-                    asd2.show();
-                }, AlertSheetDialog.DEFAULT);
-                asd.addButton("Удалить", ()->{
-                    for(Dashboard i : adapter.dashboards)
-                        Lab240.getDashboards().remove(i.getId());
-                    ga.setData(Lab240.getDashboards().values());
-                    Lab240.saveDashboards(ListActivity.this, Lab240.getDashboards());
-                }, AlertSheetDialog.DESTROY);
-                asd.show();
-                return false;
-            });
-
-        }
-    }
-
-    public class DashboardAdapter extends RecyclerView.Adapter<DashboardHolder>{
-
-        @NonNull
-        @Override
-        public DashboardHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new DashboardHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_dashboard, parent, false));
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull DashboardHolder holder, int position) {
-            Dashboard db = dashboards.get(position);
-            holder.item = db;
-            holder.name.setText(db.getName());
-        }
-
-        @Override
-        public int getItemCount() {
-            return dashboards.size();
-        }
-
-        private final List<Dashboard> dashboards = new ArrayList<>();
-
-        public void setData(Collection<Dashboard> data){
-            dashboards.clear();
-            dashboards.addAll(data);
-            Collections.sort(dashboards, (d1, d2)->{
-                if(d1.getName().equals(d2.getName()))
-                    return Long.compare(d1.getId(), d2.getId());
-                return d1.getName().compareTo(d2.getName());
-            });
-            notifyDataSetChanged();
-        }
-    }
-
-    public class DashboardHolder extends RecyclerView.ViewHolder{
-
-        final TextView name;
-        Dashboard item;
-
-        public DashboardHolder(@NonNull View itemView) {
-            super(itemView);
-            name = itemView.findViewById(R.id.name);
-            itemView.setOnClickListener(view -> {
-                Intent intent = new Intent(ListActivity.this, DashboardActivity.class);
-                intent.putExtra(DashboardActivity.DASHBOARD, item.getId());
-                startActivity(intent);
-            });
-            itemView.setOnLongClickListener(view -> {
-                Vibrator v = (Vibrator) ListActivity.this.getSystemService(Context.VIBRATOR_SERVICE);
-                v.vibrate(25);
-
-                AlertSheetDialog asd = new AlertSheetDialog(ListActivity.this);
-                asd.addButton("Переименовать", ()->{
-                    AlertSheetDialog asd2 = new AlertSheetDialog(ListActivity.this);
-                    EditText name = asd2.addEditText("Название");
-                    name.setSingleLine(true);
-                    name.setText(item.getName());
-                    Button doneButton = asd2.addButton("Переименовать", () -> {
-                        item.setName(name.getText().toString());
-                        ga.setData(Lab240.getDashboards().values());
-                        Lab240.saveDashboards(ListActivity.this, Lab240.getDashboards());
-                    }, AlertSheetDialog.DEFAULT);
-                    name.addTextChangedListener(new TextWatcher() {
-                        @Override
-                        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
-
-                        @Override
-                        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
-
-                        @Override
-                        public void afterTextChanged(Editable editable) {
-                            doneButton.setEnabled(!editable.toString().isEmpty());
-                        }
-                    });
-                    asd2.show();
-                }, AlertSheetDialog.DEFAULT);
-                asd.addButton("Переместить в", ()->{
-                    AlertSheetDialog asd2 = new AlertSheetDialog(ListActivity.this);
-                    EditText group = asd2.addEditText("Группа");
-                    group.setSingleLine(true);
-                    group.setText(item.getGroup());
-                    asd2.addButton("Переместить", ()-> {
-                        item.setGroup(group.getText().toString());
-                        ga.setData(Lab240.getDashboards().values());
-                        Lab240.saveDashboards(ListActivity.this, Lab240.getDashboards());
-                    }, AlertSheetDialog.DEFAULT);
-                    asd2.show();
-                }, AlertSheetDialog.DEFAULT);
-                asd.addButton("Удалить", ()->{
-                    Lab240.getDashboards().remove(item);
-                    ga.setData(Lab240.getDashboards().values());
-                    Lab240.saveDashboards(ListActivity.this, Lab240.getDashboards());
-                }, AlertSheetDialog.DESTROY);
-                asd.show();
-                return false;
-            });
-        }
-    }
 
     GroupAdapter ga;
 
@@ -245,9 +47,12 @@ public class ListActivity extends AppCompatActivity {
             finish();
 
         RecyclerView rv = findViewById(R.id.groups);
-        ga = new GroupAdapter();
+        Container<Runnable> update = new Container<>(null);
+        ga = new GroupAdapter(() -> update.get().run());
+        update.set(()->ga.setData(Lab240.getDevices()));
         rv.setAdapter(ga);
-        ga.setData(Lab240.getDashboards().values());
+        ga.setData(Lab240.getDevices());
+
     }
 
     @Override
@@ -260,24 +65,86 @@ public class ListActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
             case R.id.add:
-                addDashboard();
+                addDevice();
                 break;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    public void addDashboard(){
-        AlertSheetDialog asd2 = new AlertSheetDialog(ListActivity.this);
+    public void addDevice(){
+        AlertSheetDialog asd2 = new AlertSheetDialog(this);
         EditText name = asd2.addEditText("Название");
         name.setSingleLine(true);
-        name.setText("Dashboard");
+        name.setText("Device");
         EditText group = asd2.addEditText("Группа");
         group.setSingleLine(true);
+
+        List<String> devicesString = new ArrayList<>();
+        for(Devices d : Devices.values()) {
+            devicesString.add(d.name);
+        }
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, devicesString){
+            @Override
+            public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                View dropDownView = super.getDropDownView(position, convertView, parent);
+                ((TextView)dropDownView).setGravity(Gravity.CENTER);
+                return dropDownView;
+            }
+
+            @NonNull
+            @Override
+            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                View view = super.getView(position, convertView, parent);
+                ((TextView)view).setGravity(Gravity.CENTER);
+                return view;
+            }
+        };
+        List<Out> outs = new ArrayList<>();
+
+        LinearLayout outsLayout = asd2.addView(new LinearLayout(this));
+        outsLayout.setOrientation(LinearLayout.VERTICAL);
+        outsLayout.setGravity(Gravity.CENTER);
+        ViewGroup.LayoutParams layoutParams = outsLayout.getLayoutParams();
+        layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT;
+        outsLayout.setLayoutParams(layoutParams);
+
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        Spinner spinner = asd2.addView(new Spinner(this));
+        spinner.setAdapter(adapter);
+        spinner.setPrompt("Устройство");
+        spinner.setSelection(0);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                outsLayout.removeAllViews();
+                outs.clear();
+                Devices devices = Devices.values()[spinner.getSelectedItemPosition()];
+                for(Out o : devices.outs){
+                    CheckBox cb = new CheckBox(view.getContext());
+                    cb.setOnCheckedChangeListener((compoundButton, b) -> {
+                        if(b)
+                            outs.add(o);
+                        else{
+                            outs.remove(o);
+                        }
+                    });
+                    cb.setText(o.getName());
+                    outsLayout.addView(cb);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {}
+        });
+
         Button doneButton = asd2.addButton("Создать", () -> {
             long id = System.currentTimeMillis();
-            Lab240.getDashboards().put(id, new Dashboard(name.getText().toString(), id, group.getText().toString()));
-            ga.setData(Lab240.getDashboards().values());
-            Lab240.saveDashboards(ListActivity.this, Lab240.getDashboards());
+            Device d = new Device(name.getText().toString(), group.getText().toString(), id, Devices.values()[spinner.getSelectedItemPosition()]);
+            d.getOuts().addAll(outs);
+            Lab240.getDevices().add(d);
+            ga.setData(Lab240.getDevices());
+            Lab240.saveDevices(this, Lab240.getDevices());
         }, AlertSheetDialog.DEFAULT);
         name.addTextChangedListener(new TextWatcher() {
             @Override

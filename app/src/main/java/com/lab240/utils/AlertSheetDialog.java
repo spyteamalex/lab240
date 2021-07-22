@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -23,11 +24,11 @@ public class AlertSheetDialog extends BottomSheetDialog {
     LinearLayout layout;
     View v;
     Context c;
-    public AlertSheetDialog(@NonNull Activity a) {
-        super(a);
-        c = a;
+    public AlertSheetDialog(@NonNull Context c) {
+        super(c);
+        this.c = c;
         setCancelable(true);
-        v = a.getLayoutInflater().inflate( R.layout.inflate_bottom_sheet, findViewById(R.id.bottomSheetContainer), false);
+        v = LayoutInflater.from(c).inflate( R.layout.inflate_bottom_sheet, findViewById(R.id.bottomSheetContainer), false);
         setContentView(v);
         layout = v.findViewById(R.id.buttons);
         v.findViewById(R.id.cancel).setOnClickListener(v2->dismiss());

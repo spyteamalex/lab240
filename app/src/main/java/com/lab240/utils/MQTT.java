@@ -45,8 +45,14 @@ public class MQTT {
 
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
-                for(MessageCallback cb : listeners.get(topic)){
-                    cb.handle(topic, message);
+                synchronized (listeners) {
+                    try {
+                        for (MessageCallback cb : listeners.get(topic)) {
+                            cb.handle(topic, message);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
 
@@ -78,19 +84,27 @@ public class MQTT {
     }
 
     public void addListener(String topic, MessageCallback cb){
-        listeners.put(topic, cb);
+        synchronized (listeners) {
+            listeners.put(topic, cb);
+        }
     }
 
     public void addListeners(String topic, Collection<MessageCallback> cb){
-        listeners.putAll(topic, cb);
+        synchronized (listeners) {
+            listeners.putAll(topic, cb);
+        }
     }
 
     public void removeListener(String topic, MessageCallback cb){
-        listeners.remove(topic, cb);
+        synchronized (listeners) {
+            listeners.remove(topic, cb);
+        }
     }
 
     public void removeListeners(String topic, Collection<MessageCallback> cb){
-        listeners.get(topic).removeAll(cb);
+        synchronized (listeners) {
+            listeners.get(topic).removeAll(cb);
+        }
     }
 
     public void subscribe(String topic, int qos, @Nullable IMqttActionListener listener){

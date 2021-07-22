@@ -7,34 +7,33 @@ import com.google.common.base.Optional;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import com.lab240.Items.Dashboard;
-import com.lab240.Items.Item;
-import com.lab240.Items.ItemSerializer;
+import com.lab240.devices.Device;
+import com.lab240.devices.Out;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 public class Lab240 {
 
-    public static final String APP_PREFERENCES = "Config", NAME = "Name", PASS = "Pass", DASHBOARDS = "Dashboards";
-    public static String DASHBOARD_NAME = "Name", DASHBOARD_ID = "Id", DASHBOARD_GROUP = "Group", DASHBOARD_ITEMS = "Items";
-    public static String ITEM_NAME = "Name", ITEM_TOPIC = "Topic", ITEM_ID = "Id";
+    public static final String APP_PREFERENCES = "Config", NAME = "Name", PASS = "Pass", DEVICES = "Devices";
 
     private static MQTT mqtt = null;
-    private static final Map<Long, Dashboard> dashboards = new TreeMap<>();
+    private static final List<Device> devices = new ArrayList<>();
 
     public static class Config{
         public String name;
         public String pass;
 
-        public Config(String name, String pass, Map<Long, Dashboard> dashboards) {
+        public Config(String name, String pass, List<Device> devices) {
             this.name = name;
             this.pass = pass;
-            this.dashboards = dashboards;
+            this.devices = devices;
         }
 
-        public Map<Long, Dashboard> dashboards;
+        public List<Device> devices;
     }
 
     public static void setMqtt(MQTT mqtt) {
@@ -52,8 +51,8 @@ public class Lab240 {
         return mqtt;
     }
 
-    public static Map<Long, Dashboard> getDashboards() {
-        return dashboards;
+    public static List<Device> getDevices() {
+        return devices;
     }
 
     public static void saveConfig(Context c, Config conf){
@@ -61,38 +60,51 @@ public class Lab240 {
         SharedPreferences.Editor edit = sp.edit();
         edit.putString(NAME, conf.name);
         edit.putString(PASS, conf.pass);
-        edit.putString(DASHBOARDS, serializeDashboards(conf.dashboards));
+        edit.putString(DEVICES, serializeDevices(conf.devices));
         edit.apply();
     }
 
     public static Optional<Config> getConfig(Context c){
         SharedPreferences sp = c.getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
-        if(!sp.contains(NAME) || !sp.contains(PASS) || !sp.contains(DASHBOARDS))
+        if(!sp.contains(NAME) || !sp.contains(PASS) || !sp.contains(DEVICES))
             return Optional.absent();
-        return Optional.of(new Config(sp.getString(NAME, ""), sp.getString(PASS, ""), deserializeDashboards(sp.getString(DASHBOARDS, ""))));
+        return Optional.of(new Config(sp.getString(NAME, ""), sp.getString(PASS, ""), deserializeDevices(sp.getString(DEVICES, ""))));
     }
 
-    public static Map<Long, Dashboard> loadDashboards(Context c){
+    public static List<Device> loadDevices(Context c){
         SharedPreferences sp = c.getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
-        if(!sp.contains(DASHBOARDS))
-            return Collections.emptyMap();
-        return deserializeDashboards(sp.getString(DASHBOARDS, "[]"));
+        if(!sp.contains(DEVICES))
+            return Collections.emptyList();
+        return deserializeDevices(sp.getString(DEVICES, "[]"));
     }
 
-    public static void saveDashboards(Context c, Map<Long, Dashboard> dashboards){
+    public static void saveDevices(Context c, List<Device> devices){
         SharedPreferences sp = c.getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
         SharedPreferences.Editor edit = sp.edit();
-        edit.putString(DASHBOARDS, serializeDashboards(dashboards));
+        edit.putString(DEVICES, serializeDevices(devices));
         edit.apply();
     }
 
-    public static Map<Long, Dashboard> deserializeDashboards(String s){
-        Gson gson = new GsonBuilder().registerTypeAdapter(Item.class, new ItemSerializer()).create();
-        return gson.fromJson(s, new TypeToken<TreeMap<Long, Dashboard>>(){}.getType());
+    public static List<Device> deserializeDevices(String s){
+        Gson gson = new GsonBuilder().create();
+        return gson.fromJson(s, new TypeToken<List<Device>>(){}.getType());
     }
 
-    public static String serializeDashboards(Map<Long, Dashboard> dashboards){
-        Gson gson = new GsonBuilder().registerTypeAdapter(Item.class, new ItemSerializer()).create();
-        return gson.toJson(dashboards);
+    public static String serializeDevices(List<Device> devices){
+        Gson gson = new GsonBuilder().create();
+        return gson.toJson(devices);
+    }
+
+    public static String getOutPath(Device d, Out o){
+        if(mqtt == null)
+            return "";
+        StringBuilder sb = new StringBuilder();
+        sb.append("/").append(mqtt.getName());
+        sb.append("/").append(d.getName());
+        for(String s : o.getPath())
+            sb.append("/").append(s);
+        sb.append("/").append(o.getName());
+        return sb.toString();
+
     }
 }

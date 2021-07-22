@@ -4,8 +4,8 @@
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/purple_500</item>
         <item name="colorPrimaryVariant">@color/purple_700</item>
-        <item name="colorOnPrimary">@color/main</item>
-        <item name="android:windowBackground">@color/main</item>
+        <item name="colorOnPrimary">@color/primary</item>
+        <item name="android:windowBackground">@color/primary</item>
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/teal_200</item>
         <item name="colorSecondaryVariant">@color/teal_700</item>
@@ -29,7 +29,7 @@
     </style>
 
     <style name="CardViewStyle" parent="CardView">
-        <item name="cardBackgroundColor">@color/main</item>
+        <item name="cardBackgroundColor">@color/primary</item>
         <item name="cardCornerRadius">25dp</item>
         <item name="cardElevation">7dp</item>
     </style>

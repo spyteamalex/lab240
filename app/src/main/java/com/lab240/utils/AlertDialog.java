@@ -6,6 +6,7 @@ import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -21,12 +22,12 @@ public class AlertDialog{
     Context context;
     android.app.AlertDialog ad;
 
-    public AlertDialog(Activity a) {
-        this.context = a;
+    public AlertDialog(Context c) {
+        this.context = c;
 
-        android.app.AlertDialog.Builder ad = new android.app.AlertDialog.Builder(a);
+        android.app.AlertDialog.Builder ad = new android.app.AlertDialog.Builder(c);
         ad.setCancelable(true);
-        View v = a.getLayoutInflater().inflate( R.layout.inflate_alert_dialog, a.findViewById(R.id.content), false);
+        View v = LayoutInflater.from(context).inflate( R.layout.inflate_alert_dialog, null);
         text = v.findViewById(R.id.text);
         buttons = v.findViewById(R.id.buttons);
         ad.setView(v);
