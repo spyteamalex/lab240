@@ -3,22 +3,29 @@ package com.lab240.devices;
 public enum Devices {
     THERMOSTAT(
             "Термостат",
+            "in/params",
+            "out/info",
+            "out/log",
             new Out[]{
-                    new Out("temp_in", new String[]{"out", "sensors"}),
-                    new Out("temp_out", new String[]{"out", "sensors"}),
-                    new Out("time_up", new String[]{"out"})
+                    new Out("temp_in", "out", "sensors"),
+                    new Out("temp_out", "out", "sensors"),
+                    new Out("time_up", "out")
             },
             new String[]{
                     "sh net",
                     "sh lschm",
                     "sh tls",
-                    "sh bschm{param}"
+                    "sh bschm{param}",
+                    "sh bschm\\{{param}\\}{param2}{param3}{param2}{param3}{param2}{param3}{param2}{param3}{param2}{param3}"
             }),
     THERMOSTAT2(
             "Термостат2",
+            "in/params",
+            "out/info",
+            "out/log",
             new Out[]{
-                    new Out("temp_in", new String[]{"out", "sensors"}),
-                    new Out("temp_out", new String[]{"out", "sensors"})
+                    new Out("temp_in", "out", "sensors"),
+                    new Out("temp_out", "out", "sensors")
             },
             new String[]{
                     "sh net",
@@ -27,12 +34,18 @@ public enum Devices {
                     "sh bschm{param}"
             });
 
-    public String[] commands;
+    public String[] hints;
     public Out[] outs;
     public String name;
-    Devices(String name, Out[] outs, String[] commands){
+    public String mainIn;
+    public String mainOut;
+    public String log;
+    Devices(String name, String mainIn, String mainOut, String log, Out[] outs, String[] hints){
         this.name = name;
-        this.commands = commands;
+        this.hints = hints;
         this.outs = outs;
+        this.mainIn = mainIn;
+        this.mainOut = mainOut;
+        this.log = log;
     }
 }

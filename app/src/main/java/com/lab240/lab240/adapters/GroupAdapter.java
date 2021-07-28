@@ -2,17 +2,18 @@ package com.lab240.lab240.adapters;
 
 import android.util.Pair;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.lab240.devices.Device;
 import com.lab240.devices.Out;
+import com.lab240.lab240.ListActivity;
 import com.lab240.lab240.R;
 import com.lab240.utils.Lab240;
 import com.lab240.utils.MQTT;
@@ -34,7 +35,7 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder>{
     @NonNull
     @Override
     public GroupHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new GroupHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_group, parent, false), views, values, update);
+        return new GroupHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_group, parent, false), views, values, tc, update);
     }
 
     @Override
@@ -42,7 +43,6 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder>{
         String g = groups.get(position);
         holder.group = g;
         holder.name.setText(g);
-        holder.name.setVisibility(g.isEmpty() ? View.GONE : View.VISIBLE);
         holder.adapter.setData(devices.get(g));
     }
 
@@ -55,14 +55,17 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder>{
     private final Multimap<Out, TextView> views = ArrayListMultimap.create();
     private final Map<Out, String> values = new HashMap<>();
     private final List<String> groups = new ArrayList<>();
+    private final @Nullable DeviceHolder.TerminalCaller tc;
 
-    public GroupAdapter(Runnable update) {
+    public GroupAdapter(@Nullable DeviceHolder.TerminalCaller tc, @Nullable Runnable update) {
         this.update = update;
+        this.tc = tc;
     }
 
-    private final Runnable update;
+    private final @Nullable
+    Runnable update;
 
-    Set<Pair<String, MQTT.MessageCallback>> callbacks = new HashSet<>();
+    public Set<Pair<String, MQTT.MessageCallback>> callbacks = new HashSet<>();
 
     public synchronized void setData(Collection<Device> data){
         for(Pair<String, MQTT.MessageCallback> p : callbacks)
@@ -74,7 +77,7 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder>{
             devices.put(d.getGroup(), d);
             for(Out o : d.getOuts()){
                 String path = Lab240.getOutPath(d, o);
-                Lab240.getMqtt().subscribe(Lab240.getOutPath(d, o), 0, new IMqttActionListener() {
+                Lab240.getMqtt().subscribe(Lab240.getOutPath(d, o), 0, ListActivity.KEY, new IMqttActionListener() {
                     @Override
                     public void onSuccess(IMqttToken asyncActionToken) {
                     }

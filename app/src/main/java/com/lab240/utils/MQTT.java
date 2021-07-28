@@ -17,9 +17,12 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class MQTT {
 
@@ -27,10 +30,24 @@ public class MQTT {
         void handle(String topic, MqttMessage msg);
     }
 
+    public interface LostConnectionCallback {
+        void connectionLost(Throwable cause);
+    }
+
     public MQTT(String server, String name, String pass) {
         this.server = server;
         this.name = name;
         this.pass = pass;
+    }
+
+    private final Set<LostConnectionCallback> lostConnectionCallbacks = new HashSet<>();
+
+    public void addOnConnectionLostCallback(LostConnectionCallback lcc){
+        lostConnectionCallbacks.add(lcc);
+    }
+
+    public void removeOnConnectionLostCallback(LostConnectionCallback lcc){
+        lostConnectionCallbacks.remove(lcc);
     }
 
     public void connect(Context context, @Nullable IMqttActionListener listener){
@@ -40,7 +57,9 @@ public class MQTT {
         client.setCallback(new MqttCallback() {
             @Override
             public void connectionLost(Throwable cause) {
-
+                for(LostConnectionCallback clc : lostConnectionCallbacks){
+                    clc.connectionLost(cause);
+                }
             }
 
             @Override
@@ -76,8 +95,8 @@ public class MQTT {
 
     private MqttConnectOptions getMqttConnectionOption() {
         MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
-        mqttConnectOptions.setCleanSession(false);
-        mqttConnectOptions.setAutomaticReconnect(true);
+        mqttConnectOptions.setCleanSession(true);
+        mqttConnectOptions.setAutomaticReconnect(false);
         mqttConnectOptions.setUserName(name);
         mqttConnectOptions.setPassword(pass != null ? pass.toCharArray() : null);
         return mqttConnectOptions;
@@ -107,7 +126,33 @@ public class MQTT {
         }
     }
 
-    public void subscribe(String topic, int qos, @Nullable IMqttActionListener listener){
+    public void send(String topic, String msg, int qos) {
+        send(topic, msg, qos, null);
+    }
+
+    public void send(String topic, String msg, int qos, @Nullable IMqttActionListener listener) {
+        if(client == null || !client.isConnected()) {
+            throw new RuntimeException("No connection");
+        }
+        IMqttToken subToken = null;
+        try {
+            subToken = client.publish(topic, msg.getBytes(), qos, false);
+        } catch (MqttException e) {
+            e.printStackTrace();
+            if(listener != null)
+                listener.onFailure(subToken, e);
+            return;
+        }
+        subToken.setActionCallback(listener);
+    }
+
+    private final Map<String, Set<Integer>> subs = new HashMap<>();
+
+    public void subscribe(String topic, int qos, int key){
+        subscribe(topic, qos, key, null);
+    }
+
+    public void subscribe(String topic, int qos, int key, @Nullable IMqttActionListener listener){
         if(client == null || !client.isConnected()) {
             throw new RuntimeException("No connection");
         }
@@ -121,14 +166,30 @@ public class MQTT {
                 listener.onFailure(subToken, e);
             return;
         }
-        subToken.setActionCallback(listener);
+        subToken.setActionCallback(new IMqttActionListener() {
+            @Override
+            public void onSuccess(IMqttToken asyncActionToken) {
+                if(listener != null) listener.onSuccess(asyncActionToken);
+                if(!subs.containsKey(topic))
+                    subs.put(topic, new TreeSet<>());
+                subs.get(topic).add(key);
+            }
+
+            @Override
+            public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                if(listener != null) listener.onFailure(asyncActionToken, exception);
+            }
+        });
     }
 
-    public void subscribe(String topic, int qos){
-        subscribe(topic, qos, null);
-    }
-
-    public void unsubscribe(String topic, @Nullable IMqttActionListener listener){
+    public void unsubscribe(String topic, int key, @Nullable IMqttActionListener listener){
+        if(!subs.containsKey(topic)){
+            return;
+        }else{
+            subs.get(topic).remove(key);
+        }
+        if(!subs.get(topic).isEmpty())
+            return;
         if(client == null)
             throw new RuntimeException("No connection");
 
@@ -144,8 +205,21 @@ public class MQTT {
         subToken.setActionCallback(listener);
     }
 
-    public void unsubscribe(String topic){
-        unsubscribe(topic, null);
+    public void unsubscribe(String topic, int key){
+        unsubscribe(topic, key,null);
+    }
+
+    public Set<String> getSubscriptions(){
+        return subs.keySet();
+    }
+
+    public Set<String> getSubscriptions(int key){
+        Set<String> res = new HashSet<>();
+        for(Map.Entry<String, Set<Integer>> i : subs.entrySet()){
+            if(i.getValue().contains(key))
+                res.add(i.getKey());
+        }
+        return res;
     }
 
     private final String server;

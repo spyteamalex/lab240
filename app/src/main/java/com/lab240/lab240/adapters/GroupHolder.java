@@ -2,12 +2,12 @@ package com.lab240.lab240.adapters;
 
 import android.content.Context;
 import android.os.Vibrator;
-import android.util.Pair;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.common.collect.Multimap;
@@ -27,10 +27,10 @@ public class GroupHolder extends RecyclerView.ViewHolder{
     String group;
 
 
-    public GroupHolder(@NonNull View itemView, Multimap<Out, TextView> views, Map<Out, String> values, Runnable update) {
+    public GroupHolder(@NonNull View itemView, Multimap<Out, TextView> views, Map<Out, String> values, @Nullable DeviceHolder.TerminalCaller tc, @Nullable Runnable update) {
         super(itemView);
         devices = itemView.findViewById(R.id.devices);
-        adapter = new DeviceAdapter(views, values, update);
+        adapter = new DeviceAdapter(views, values, tc, update);
         devices.setAdapter(adapter);
         name = itemView.findViewById(R.id.name);
 
@@ -40,7 +40,7 @@ public class GroupHolder extends RecyclerView.ViewHolder{
             AlertSheetDialog asd = new AlertSheetDialog(view.getContext());
             asd.addButton("Переименовать", ()->{
                 AlertSheetDialog asd2 = new AlertSheetDialog(view.getContext());
-                EditText gr = asd2.addEditText("Название");
+                EditText gr = asd2.addTextInput("Название");
                 gr.setSingleLine(true);
                 gr.setText(group);
                 asd2.addButton("Переименовать", () -> {
@@ -48,15 +48,15 @@ public class GroupHolder extends RecyclerView.ViewHolder{
                         d.setGroup(gr.getText().toString());
                     if(update != null) update.run();
                     Lab240.saveDevices(view.getContext(), Lab240.getDevices());
-                }, AlertSheetDialog.DEFAULT);
+                }, AlertSheetDialog.ButtonType.DEFAULT);
                 asd2.show();
-            }, AlertSheetDialog.DEFAULT);
+            }, AlertSheetDialog.ButtonType.DEFAULT);
             asd.addButton("Удалить", ()->{
                 for(Device i : adapter.devices)
                     Lab240.getDevices().remove(i);
                 if(update != null) update.run();
                 Lab240.saveDevices(view.getContext(), Lab240.getDevices());
-            }, AlertSheetDialog.DESTROY);
+            }, AlertSheetDialog.ButtonType.DESTROY);
             asd.show();
             return false;
         });

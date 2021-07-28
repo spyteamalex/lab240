@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.common.collect.Multimap;
@@ -22,19 +23,21 @@ import java.util.Map;
 
 public class DeviceAdapter extends RecyclerView.Adapter<DeviceHolder>{
 
-    public DeviceAdapter(Multimap<Out, TextView> views, Map<Out, String> values, Runnable update) {
+    public DeviceAdapter(Multimap<Out, TextView> views, Map<Out, String> values, @Nullable DeviceHolder.TerminalCaller tc, @Nullable Runnable update) {
         this.update = update;
         this.values = values;
         this.views = views;
+        this.tc = tc;
     }
 
     private final Multimap<Out, TextView> views;
     private final Map<Out, String> values;
+    private final @Nullable DeviceHolder.TerminalCaller tc;
 
     @NonNull
     @Override
     public DeviceHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new DeviceHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_device, parent, false), views, values, update);
+        return new DeviceHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_device, parent, false), views, values, tc, update);
     }
 
     @Override
@@ -53,7 +56,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceHolder>{
     }
 
     public final List<Device> devices = new ArrayList<>();
-    private final Runnable update;
+    private final @Nullable Runnable update;
 
     public void setData(Collection<Device> data){
         devices.clear();

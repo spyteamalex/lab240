@@ -11,7 +11,7 @@ public class Out implements Comparable<Out>  {
         return name;
     }
 
-    public Out(String name, String[] path) {
+    public Out(String name, String... path) {
         this.name = name;
         this.path = path;
     }

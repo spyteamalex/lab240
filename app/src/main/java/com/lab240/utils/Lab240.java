@@ -85,6 +85,13 @@ public class Lab240 {
         edit.apply();
     }
 
+    public static void exit(Context c){
+        SharedPreferences sp = c.getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences.Editor edit = sp.edit();
+        edit.clear();
+        edit.apply();
+    }
+
     public static List<Device> deserializeDevices(String s){
         Gson gson = new GsonBuilder().create();
         return gson.fromJson(s, new TypeToken<List<Device>>(){}.getType());

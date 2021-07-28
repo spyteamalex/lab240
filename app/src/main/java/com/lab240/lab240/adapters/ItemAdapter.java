@@ -32,7 +32,10 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemHolder>{
     @NonNull
     @Override
     public ItemHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new ItemHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_item, parent, false));
+        ItemHolder itemHolder = new ItemHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_item, parent, false));
+        itemHolder.itemView.setOnClickListener(v -> parent.callOnClick());
+        itemHolder.itemView.setOnLongClickListener(v -> parent.performLongClick());
+        return itemHolder;
     }
 
     @Override

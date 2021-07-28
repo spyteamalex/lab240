@@ -1,8 +1,10 @@
 package com.lab240.lab240;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Pair;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,15 +31,19 @@ import com.lab240.lab240.adapters.GroupAdapter;
 import com.lab240.utils.AlertSheetDialog;
 import com.lab240.utils.Container;
 import com.lab240.utils.Lab240;
+import com.lab240.utils.MQTT;
+
+import org.eclipse.paho.client.mqttv3.IMqttActionListener;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class ListActivity extends AppCompatActivity {
 
     GroupAdapter ga;
+
+    public static final int KEY = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,11 +54,23 @@ public class ListActivity extends AppCompatActivity {
 
         RecyclerView rv = findViewById(R.id.groups);
         Container<Runnable> update = new Container<>(null);
-        ga = new GroupAdapter(() -> update.get().run());
+        ga = new GroupAdapter((device)->{
+            Intent i = new Intent(this, TerminalActivity.class);
+            i.putExtra(TerminalActivity.HINTS, device.getType().hints);
+            String prefix = "/"+Lab240.getMqtt().getName()+"/"+device.getName()+"/";
+            i.putExtra(TerminalActivity.IN, prefix+device.getType().mainIn);
+            i.putExtra(TerminalActivity.OUT, prefix+device.getType().mainOut);
+            i.putExtra(TerminalActivity.LOG, prefix+device.getType().log);
+            i.putExtra(TerminalActivity.DEVICE, device.getName());
+            startActivity(i);
+        },() -> update.get().run());
         update.set(()->ga.setData(Lab240.getDevices()));
         rv.setAdapter(ga);
         ga.setData(Lab240.getDevices());
 
+        lcc = cause -> {
+            handleNoConnection();
+        };
     }
 
     @Override
@@ -67,16 +85,18 @@ public class ListActivity extends AppCompatActivity {
             case R.id.add:
                 addDevice();
                 break;
+            case R.id.exit:
+                exit();
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
 
     public void addDevice(){
         AlertSheetDialog asd2 = new AlertSheetDialog(this);
-        EditText name = asd2.addEditText("Название");
+        EditText name = asd2.addTextInput("Название");
         name.setSingleLine(true);
-        name.setText("Device");
-        EditText group = asd2.addEditText("Группа");
+        EditText group = asd2.addTextInput("Группа");
         group.setSingleLine(true);
 
         List<String> devicesString = new ArrayList<>();
@@ -145,7 +165,7 @@ public class ListActivity extends AppCompatActivity {
             Lab240.getDevices().add(d);
             ga.setData(Lab240.getDevices());
             Lab240.saveDevices(this, Lab240.getDevices());
-        }, AlertSheetDialog.DEFAULT);
+        }, AlertSheetDialog.ButtonType.DEFAULT);
         name.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
@@ -159,5 +179,57 @@ public class ListActivity extends AppCompatActivity {
             }
         });
         asd2.show();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        for(String topic : Lab240.getMqtt().getSubscriptions())
+            Lab240.getMqtt().unsubscribe(topic, KEY);
+        for(Pair<String, MQTT.MessageCallback> p : ga.callbacks)
+            Lab240.getMqtt().removeListener(p.first, p.second);
+    }
+
+    public void handleNoConnection(){
+        AlertSheetDialog asd = new AlertSheetDialog(this);
+        asd.setCancelable(false);
+        asd.setCloseOnAction(false);
+        asd.addText(getResources().getString(R.string.no_connection));
+        asd.addButton("Подключиться", ()->{
+            Lab240.getMqtt().connect(this, new IMqttActionListener() {
+                @Override
+                public void onSuccess(IMqttToken asyncActionToken) {
+                    ga.setData(Lab240.getDevices());
+                    asd.dismiss();
+                }
+
+                @Override
+                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                }
+            });
+        }, AlertSheetDialog.ButtonType.DEFAULT);
+        asd.addButton("Выйти", this::exit, AlertSheetDialog.ButtonType.DESTROY);
+        asd.show();
+    }
+
+    private MQTT.LostConnectionCallback lcc = null;
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if(lcc != null)
+            Lab240.getMqtt().removeOnConnectionLostCallback(lcc);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(lcc != null)
+            Lab240.getMqtt().addOnConnectionLostCallback(lcc);
+    }
+
+    private void exit(){
+        Lab240.exit(this);
+        System.exit(0);
     }
 }

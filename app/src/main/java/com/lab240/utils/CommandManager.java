@@ -27,7 +27,7 @@ public class CommandManager {
         Matcher matcher = pattern.matcher(command);
         List<String> pars = new ArrayList<>();
         while (matcher.find()){
-            pars.add(matcher.group(0));
+            pars.add(matcher.group(1));
         }
         return pars;
     }
@@ -38,6 +38,27 @@ public class CommandManager {
             for(String value : values)
                 command = command.replaceFirst(REGEX_PARAMETER, value);
             }
+        return command
+                .replace("\\{", "{")
+                .replace("\\}", "}")
+                .replace("\\\\","\\");
+    }
+
+    public String getTemplate(){
+        return command
+                .replace("\\{", "{")
+                .replace("\\}", "}")
+                .replace("\\\\","\\");
+    }
+
+    public String getResult(){
+        return getResult("");
+    }
+
+    public String getResult(String value){
+        String command = this.command;
+        if(command.matches(REGEX_ALL))
+            command = command.replaceAll(REGEX_PARAMETER, value);
         return command
                 .replace("\\{", "{")
                 .replace("\\}", "}")

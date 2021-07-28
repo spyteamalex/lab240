@@ -1,5 +1,6 @@
 package com.lab240.lab240;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -12,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.common.base.Optional;
 import com.lab240.devices.Device;
+import com.lab240.utils.AlertSheetDialog;
 import com.lab240.utils.Lab240;
 import com.lab240.utils.MQTT;
 
@@ -77,6 +79,10 @@ public class LoginActivity extends AppCompatActivity {
             public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
                 loginLayout.setVisibility(View.VISIBLE);
                 progressBar.setVisibility(View.GONE);
+                AlertSheetDialog asd = new AlertSheetDialog(LoginActivity.this);
+                asd.addText(getResources().getString(R.string.login_fail));
+                asd.setCancelButtonText("Ok", AlertSheetDialog.ButtonType.DEFAULT);
+                asd.show();
             }
         });
     }

@@ -15,7 +15,7 @@
 
         <LinearLayout
             android:id="@+id/buttons"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:background="@drawable/bottom_sheet_button"
             android:foregroundGravity="center"
@@ -23,29 +23,22 @@
             android:orientation="vertical"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_max="600dp">
 
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/cancelLL"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:background="@drawable/bottom_sheet_button"
             android:orientation="vertical"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/buttons">
-
-            <Button
-                android:id="@+id/cancel"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:text="Отмена"
-                android:textAllCaps="false"
-                android:textColor="@color/highlighted"
-                android:textSize="16sp" />
+            app:layout_constraintTop_toBottomOf="@id/buttons"
+            app:layout_constraintWidth_max="600dp">
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

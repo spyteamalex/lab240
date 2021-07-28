@@ -14,8 +14,11 @@
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
         <item name="bottomSheetDialogTheme">@style/BottomSheetDialogTheme</item>
+        <item name="android:overScrollMode">never</item>
 
         <item name="cardViewStyle">@style/CardViewStyle</item>
+        <item name="buttonStyle">@style/Widget.MaterialComponents.Button</item>
+
     </style>
 
     <style name="Divider">

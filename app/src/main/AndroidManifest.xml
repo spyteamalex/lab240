@@ -16,6 +16,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Lab240">
         <activity
+            android:name=".TerminalActivity"
+            android:configChanges="orientation|screenSize" />
+        <activity
             android:name=".ListActivity"
             android:configChanges="orientation|screenSize" />
         <activity
@@ -29,6 +32,10 @@
         </activity>
 
         <service android:name="org.eclipse.paho.android.service.MqttService" />
+
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
     </application>
 
 </manifest>

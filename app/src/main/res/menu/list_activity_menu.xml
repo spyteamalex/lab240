@@ -7,4 +7,10 @@
         android:orderInCategory="100"
         app:showAsAction="always"
         android:title="Добавить" />
+    <item
+        android:id="@+id/exit"
+        android:icon="@drawable/ic_baseline_exit_to_app_24"
+        android:orderInCategory="100"
+        app:showAsAction="always"
+        android:title="Выйти" />
 </menu>
