@@ -2,6 +2,7 @@ package com.lab240.lab240.adapters;
 
 import android.content.Context;
 import android.os.Vibrator;
+import android.util.Pair;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -17,6 +18,7 @@ import com.lab240.lab240.R;
 import com.lab240.utils.AlertSheetDialog;
 import com.lab240.utils.Lab240;
 
+import java.util.List;
 import java.util.Map;
 
 public class GroupHolder extends RecyclerView.ViewHolder{
@@ -27,10 +29,10 @@ public class GroupHolder extends RecyclerView.ViewHolder{
     String group;
 
 
-    public GroupHolder(@NonNull View itemView, Multimap<Out, TextView> views, Map<Out, String> values, @Nullable DeviceHolder.TerminalCaller tc, @Nullable Runnable update) {
+    public GroupHolder(@NonNull View itemView, List<String> groups, Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters, Map<Pair<String, Out>, String> values, @Nullable DeviceHolder.TerminalCaller tc, @Nullable Runnable update) {
         super(itemView);
         devices = itemView.findViewById(R.id.devices);
-        adapter = new DeviceAdapter(views, values, tc, update);
+        adapter = new DeviceAdapter(groups, updaters, values, tc, update);
         devices.setAdapter(adapter);
         name = itemView.findViewById(R.id.name);
 

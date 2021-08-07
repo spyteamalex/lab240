@@ -3,7 +3,6 @@ package com.lab240.lab240.adapters;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -32,10 +31,14 @@ import java.util.Set;
 
 public class GroupAdapter extends RecyclerView.Adapter<GroupHolder>{
 
+    interface Updater{
+        void update(String s);
+    }
+
     @NonNull
     @Override
     public GroupHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new GroupHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_group, parent, false), views, values, tc, update);
+        return new GroupHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_group, parent, false), groups, updaters, values, tc, update);
     }
 
     @Override
@@ -52,8 +55,8 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder>{
     }
 
     private final Multimap<String, Device> devices = ArrayListMultimap.create();
-    private final Multimap<Out, TextView> views = ArrayListMultimap.create();
-    private final Map<Out, String> values = new HashMap<>();
+    private final Multimap<Pair<String, Out>, Updater> updaters = ArrayListMultimap.create();
+    private final Map<Pair<String, Out>, String> values = new HashMap<>();
     private final List<String> groups = new ArrayList<>();
     private final @Nullable DeviceHolder.TerminalCaller tc;
 
@@ -84,16 +87,35 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder>{
 
                     @Override
                     public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                        values.put(o, "Fail");
+                        values.put(Pair.create(d.getName(), o), "Fail");
                     }
                 });
                 MQTT.MessageCallback mc = (topic, msg) -> {
-                    values.put(o, msg.toString());
-                    updateValues(o);
+                    values.put(Pair.create(d.getName(), o), msg.toString());
+                    updateValues(d.getName(), o);
                 };
                 Lab240.getMqtt().addListener(path, mc);
                 callbacks.add(Pair.create(path, mc));
 
+            }
+            for(Out o : d.getType().relays){
+                String path = Lab240.getOutPath(d, o);
+                Lab240.getMqtt().subscribe(Lab240.getOutPath(d, o), 0, ListActivity.KEY, new IMqttActionListener() {
+                    @Override
+                    public void onSuccess(IMqttToken asyncActionToken) {
+                    }
+
+                    @Override
+                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                        values.put(Pair.create(d.getName(), o), "0");
+                    }
+                });
+                MQTT.MessageCallback mc = (topic, msg) -> {
+                    values.put(Pair.create(d.getName(), o), msg.toString());
+                    updateValues(d.getName(), o);
+                };
+                Lab240.getMqtt().addListener(path, mc);
+                callbacks.add(Pair.create(path, mc));
             }
         }
         groups.addAll(devices.keySet());
@@ -101,10 +123,11 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder>{
         notifyDataSetChanged();
     }
 
-    public synchronized void updateValues(Out out) {
-        String str = values.containsKey(out) ? values.get(out) : "—";
-        for (TextView i: views.get(out)) {
-            i.setText(str);
+    public synchronized void updateValues(String device, Out out) {
+        Pair<String, Out> p = Pair.create(device, out);
+        String str = values.containsKey(p) ? values.get(p) : "—";
+        for (Updater i: updaters.get(p)) {
+            i.update(str);
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.lab240.lab240;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.widget.Button;
@@ -10,6 +11,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.lab240.devices.Device;
+import com.lab240.devices.Devices;
+import com.lab240.devices.OutLine;
 import com.lab240.lab240.adapters.HintAdapter;
 import com.lab240.lab240.adapters.TerminalAdapter;
 import com.lab240.utils.AlertSheetDialog;
@@ -30,32 +34,22 @@ import java.util.Locale;
 
 public class TerminalActivity extends AppCompatActivity {
 
-    public static class OutLine{
-        public enum Type{
-            IN, OUT, LOG;
-        }
+    public static final String RESULT = "Result";
 
-        public OutLine(String value, Type type) {
-            this.type = type;
-            this.value = value;
-        }
-
-        public final Type type;
-        public final String value;
-    }
-
-    public static final String HINTS = "Hints";
-    public static final String IN = "In";
-    public static final String OUT = "Out";
-    public static final String LOG = "Log";
+    public static final String TYPE = "Type";
     public static final String DEVICE = "Device";
+    public static final String ID = "Id";
+    public static final String OUTLINES = "OutLines";
     public static final String IN_DATE_FORMAT = "'IN'(dd.MM HH:mm):  ";
     public static final String OUT_DATE_FORMAT = "'OUT'(dd.MM HH:mm):  ";
     public static final String LOG_DATE_FORMAT = "'LOG'(dd.MM HH:mm):  ";
+    Devices type;
+    long id;
+    TerminalAdapter ta;
     String out;
     String in;
     String log;
-    TerminalAdapter ta;
+
     static final int KEY = 1;
 
     MQTT.MessageCallback inCallback, outCallback, logCallback;
@@ -67,15 +61,28 @@ public class TerminalActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_terminal);
         Bundle extras = getIntent().getExtras();
-        if(!extras.containsKey(IN) || !extras.containsKey(OUT) || !extras.containsKey(DEVICE) || !extras.containsKey(HINTS)) {
+        if(!extras.containsKey(TYPE)
+                || !extras.containsKey(DEVICE)
+                || !extras.containsKey(OUTLINES)
+                || !extras.containsKey(ID)) {
+            setResult(RESULT_CANCELED);
             finish();
             return;
         }
-        String[] hintsArray = getIntent().getStringArrayExtra(HINTS);
-        in = getIntent().getStringExtra(IN);
-        out = getIntent().getStringExtra(OUT);
-        log = getIntent().getStringExtra(LOG);
-        String device = getIntent().getStringExtra(DEVICE);
+        Intent intent = getIntent();
+        int type = intent.getIntExtra(TYPE, 0);
+        this.type = Devices.values()[type];
+        String device = intent.getStringExtra(DEVICE);
+
+        String prefix = "/"+Lab240.getMqtt().getName()+"/"+device+"/";
+        id = intent.getLongExtra(ID, 0);
+        in = prefix+this.type.mainIn;
+        out = prefix+this.type.mainOut;
+        log = prefix+this.type.log;
+
+        List<OutLine> outlines = Lab240.deserializeOutLines(intent.getStringExtra(OUTLINES));
+        outs.addAll(outlines);
+
 
         outsView = findViewById(R.id.outs);
         RecyclerView hints = findViewById(R.id.hints);
@@ -116,15 +123,17 @@ public class TerminalActivity extends AppCompatActivity {
                 asd.show();
             }
         });
-        hintAdapter.setData(Arrays.asList(hintsArray));
+        hintAdapter.setData(Arrays.asList(this.type.hints));
         hints.setAdapter(hintAdapter);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setTitle(device);
+        if(getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle(device);
+        }
 
-        lcc = cause -> {
-            handleNoConnection();
-        };
+        lcc = cause -> handleNoConnection();
         prepareTopics();
+
+        update(outs);
     }
 
     @Override
@@ -157,7 +166,7 @@ public class TerminalActivity extends AppCompatActivity {
             handleNoConnection();
             return;
         }
-        ta.setData(this.outs);
+        update(this.outs);
     }
 
     private static String clearMsg(String str){
@@ -169,18 +178,16 @@ public class TerminalActivity extends AppCompatActivity {
         asd.setCancelable(false);
         asd.setCloseOnAction(false);
         asd.addText(getResources().getString(R.string.no_connection));
-        asd.addButton("Подключиться", ()->{
-            Lab240.getMqtt().connect(this, new IMqttActionListener() {
-                @Override
-                public void onSuccess(IMqttToken asyncActionToken) {
-                    prepareTopics();
-                    asd.dismiss();
-                }
+        asd.addButton("Подключиться", ()-> Lab240.getMqtt().connect(this, new IMqttActionListener() {
+            @Override
+            public void onSuccess(IMqttToken asyncActionToken) {
+                prepareTopics();
+                asd.dismiss();
+            }
 
-                @Override
-                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {}
-            });
-        }, AlertSheetDialog.ButtonType.DEFAULT);
+            @Override
+            public void onFailure(IMqttToken asyncActionToken, Throwable exception) {}
+        }), AlertSheetDialog.ButtonType.DEFAULT);
         asd.addButton("Выйти", ()->{
             Lab240.exit(this);
             System.exit(0);
@@ -204,6 +211,15 @@ public class TerminalActivity extends AppCompatActivity {
             Lab240.getMqtt().addOnConnectionLostCallback(lcc);
     }
 
+    public void setResult(List<OutLine> outs){
+        List<OutLine> outLines = outs.subList(Math.max(0, outs.size() - Device.SAVE_COUNT), outs.size());
+        String result = Lab240.serializeOutLines(outLines);
+        Intent intent = new Intent();
+        intent.putExtra(RESULT, result);
+        intent.putExtra(ID, id);
+        setResult(RESULT_OK, intent);
+    }
+
     public void prepareTopics(){
         if(!Lab240.getMqtt().isConnected()){
             return;
@@ -212,7 +228,7 @@ public class TerminalActivity extends AppCompatActivity {
         outCallback = (topic, msg) -> {
             SimpleDateFormat sdf = new SimpleDateFormat(OUT_DATE_FORMAT, Locale.getDefault());
             this.outs.add(new OutLine(sdf.format(new Date()) + clearMsg(msg.toString()), OutLine.Type.OUT));
-            ta.setData(this.outs);
+            update(this.outs);
             outsView.smoothScrollToPosition(this.outs.size()-1);
         };
         Lab240.getMqtt().addListener(out, outCallback);
@@ -221,7 +237,7 @@ public class TerminalActivity extends AppCompatActivity {
         inCallback = (topic, msg) -> {
             SimpleDateFormat sdf = new SimpleDateFormat(IN_DATE_FORMAT, Locale.getDefault());
             this.outs.add(new OutLine(sdf.format(new Date()) + clearMsg(msg.toString()), OutLine.Type.IN));
-            ta.setData(this.outs);
+            update(this.outs);
             outsView.smoothScrollToPosition(this.outs.size()-1);
         };
         Lab240.getMqtt().addListener(in, inCallback);
@@ -230,10 +246,15 @@ public class TerminalActivity extends AppCompatActivity {
         logCallback = (topic, msg) -> {
             SimpleDateFormat sdf = new SimpleDateFormat(LOG_DATE_FORMAT, Locale.getDefault());
             this.outs.add(new OutLine(sdf.format(new Date()) + clearMsg(msg.toString()), OutLine.Type.LOG));
-            ta.setData(this.outs);
+            update(this.outs);
             outsView.smoothScrollToPosition(this.outs.size()-1);
         };
         Lab240.getMqtt().addListener(log, inCallback);
+    }
+
+    public void update(List<OutLine> data){
+        ta.setData(data);
+        setResult(data);
     }
 
 }

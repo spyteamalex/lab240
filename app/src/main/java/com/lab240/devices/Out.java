@@ -26,7 +26,7 @@ public class Out implements Comparable<Out>  {
 
     @Override
     public int compareTo(Out out) {
-        int names = out.getName().compareTo(getName());
+        int names = getName().compareTo(out.getName());
         int paths = Comparator.compare(path, out.path);
         if(names != 0)
             return names;

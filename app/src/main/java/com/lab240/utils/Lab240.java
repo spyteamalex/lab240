@@ -9,12 +9,11 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.lab240.devices.Device;
 import com.lab240.devices.Out;
+import com.lab240.devices.OutLine;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 public class Lab240 {
 
@@ -100,6 +99,16 @@ public class Lab240 {
     public static String serializeDevices(List<Device> devices){
         Gson gson = new GsonBuilder().create();
         return gson.toJson(devices);
+    }
+
+    public static List<OutLine> deserializeOutLines(String s){
+        Gson gson = new GsonBuilder().create();
+        return gson.fromJson(s, new TypeToken<List<OutLine>>(){}.getType());
+    }
+
+    public static String serializeOutLines(List<OutLine> outLines){
+        Gson gson = new GsonBuilder().create();
+        return gson.toJson(outLines);
     }
 
     public static String getOutPath(Device d, Out o){

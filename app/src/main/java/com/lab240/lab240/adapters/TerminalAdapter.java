@@ -2,7 +2,6 @@ package com.lab240.lab240.adapters;
 
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.util.Pair;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -11,8 +10,8 @@ import androidx.annotation.NonNull;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.lab240.devices.OutLine;
 import com.lab240.lab240.R;
-import com.lab240.lab240.TerminalActivity;
 import com.lab240.utils.Converter;
 
 import java.util.ArrayList;
@@ -22,7 +21,7 @@ public class TerminalAdapter extends RecyclerView.Adapter<TerminalItem> {
 
     @Override
     public void onBindViewHolder(final TerminalItem holder, final int position) {
-        final TerminalActivity.OutLine item = items.get(position);
+        final OutLine item = items.get(position);
         holder.titleView.setText(item.value);
         int padding = Converter.dpToPx(holder.itemView.getContext(), 5);
         holder.titleView.setPadding(padding, padding, padding, padding);
@@ -55,9 +54,9 @@ public class TerminalAdapter extends RecyclerView.Adapter<TerminalItem> {
         return new TerminalItem(view);
     }
 
-    final List<TerminalActivity.OutLine> items = new ArrayList<>();
+    final List<OutLine> items = new ArrayList<>();
 
-    public void setData(List<TerminalActivity.OutLine> items){
+    public void setData(List<OutLine> items){
         this.items.clear();
         this.items.addAll(items);
         notifyDataSetChanged();

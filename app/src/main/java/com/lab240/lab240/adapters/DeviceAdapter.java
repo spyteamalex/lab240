@@ -4,7 +4,6 @@ import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,6 +15,7 @@ import com.lab240.devices.Out;
 import com.lab240.lab240.R;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -23,31 +23,32 @@ import java.util.Map;
 
 public class DeviceAdapter extends RecyclerView.Adapter<DeviceHolder>{
 
-    public DeviceAdapter(Multimap<Out, TextView> views, Map<Out, String> values, @Nullable DeviceHolder.TerminalCaller tc, @Nullable Runnable update) {
+    public DeviceAdapter(List<String> groups, Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters, Map<Pair<String, Out>, String> values, @Nullable DeviceHolder.TerminalCaller tc, @Nullable Runnable update) {
         this.update = update;
         this.values = values;
-        this.views = views;
+        this.updaters = updaters;
         this.tc = tc;
+        this.groups = groups;
     }
 
-    private final Multimap<Out, TextView> views;
-    private final Map<Out, String> values;
+    private final Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters;
+    private final Map<Pair<String, Out>, String> values;
     private final @Nullable DeviceHolder.TerminalCaller tc;
+    private final List<String> groups;
 
     @NonNull
     @Override
     public DeviceHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new DeviceHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_device, parent, false), views, values, tc, update);
+        return new DeviceHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_device, parent, false), groups, updaters, values, tc, update);
     }
 
     @Override
     public void onBindViewHolder(@NonNull DeviceHolder holder, int position) {
         Device d = devices.get(position);
         holder.item = d;
-        holder.items.setVisibility(d.getOuts().isEmpty() ? View.GONE : View.VISIBLE);
         holder.name.setText(d.getName());
         holder.type.setText(d.getType().name);
-        holder.adapter.setData(d.getOuts());
+        holder.adapter.setData(d.getName(), Arrays.asList(d.getType().relays), d.getOuts());
     }
 
     @Override

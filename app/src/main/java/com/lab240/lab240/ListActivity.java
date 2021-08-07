@@ -1,5 +1,6 @@
 package com.lab240.lab240;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -11,22 +12,26 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
-import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.lab240.devices.Device;
 import com.lab240.devices.Devices;
 import com.lab240.devices.Out;
+import com.lab240.devices.OutLine;
+import com.lab240.utils.GravityArrayAdapter;
 import com.lab240.lab240.adapters.GroupAdapter;
 import com.lab240.utils.AlertSheetDialog;
 import com.lab240.utils.Container;
@@ -37,13 +42,37 @@ import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class ListActivity extends AppCompatActivity {
 
     GroupAdapter ga;
 
     public static final int KEY = 2;
+
+    ActivityResultLauncher<Intent> consoleLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK) {
+                    Intent data = result.getData();
+                    if(data == null || !data.hasExtra(TerminalActivity.RESULT) || !data.hasExtra(TerminalActivity.ID))
+                        return;
+                    long id = data.getLongExtra(TerminalActivity.ID, 0);
+                    Gson gson = new GsonBuilder().create();
+                    List<OutLine> res = gson.fromJson(data.getStringExtra(TerminalActivity.RESULT), new TypeToken<List<OutLine>>(){}.getType());
+                    for(Device d : Lab240.getDevices()) {
+                        if(d.getId() == id) {
+                            d.getConsoleLasts().clear();
+                            d.getConsoleLasts().addAll(res);
+                            break;
+                        }
+                    }
+                    Lab240.saveDevices(this, Lab240.getDevices());
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,22 +84,19 @@ public class ListActivity extends AppCompatActivity {
         RecyclerView rv = findViewById(R.id.groups);
         Container<Runnable> update = new Container<>(null);
         ga = new GroupAdapter((device)->{
+            if(!hasWindowFocus())
+                return;
             Intent i = new Intent(this, TerminalActivity.class);
-            i.putExtra(TerminalActivity.HINTS, device.getType().hints);
-            String prefix = "/"+Lab240.getMqtt().getName()+"/"+device.getName()+"/";
-            i.putExtra(TerminalActivity.IN, prefix+device.getType().mainIn);
-            i.putExtra(TerminalActivity.OUT, prefix+device.getType().mainOut);
-            i.putExtra(TerminalActivity.LOG, prefix+device.getType().log);
+            i.putExtra(TerminalActivity.TYPE, device.getType().ordinal());
             i.putExtra(TerminalActivity.DEVICE, device.getName());
-            startActivity(i);
+            i.putExtra(TerminalActivity.ID, device.getId());
+            i.putExtra(TerminalActivity.OUTLINES, Lab240.serializeOutLines(device.getConsoleLasts()));
+            consoleLauncher.launch(i);
         },() -> update.get().run());
         update.set(()->ga.setData(Lab240.getDevices()));
         rv.setAdapter(ga);
         ga.setData(Lab240.getDevices());
-
-        lcc = cause -> {
-            handleNoConnection();
-        };
+        lcc = cause -> handleNoConnection();
     }
 
     @Override
@@ -81,13 +107,10 @@ public class ListActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()){
-            case R.id.add:
-                addDevice();
-                break;
-            case R.id.exit:
+        if(item.getItemId() == R.id.add) {
+            addDevice();
+        }else if(item.getItemId() == R.id.exit){
                 exit();
-                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -96,6 +119,21 @@ public class ListActivity extends AppCompatActivity {
         AlertSheetDialog asd2 = new AlertSheetDialog(this);
         EditText name = asd2.addTextInput("Название");
         name.setSingleLine(true);
+
+        Set<String> groups = new HashSet<>();
+        for(Device d : Lab240.getDevices()){
+            groups.add(d.getGroup());
+        }
+        List<String> groups2 = new ArrayList<>(groups);
+        groups2.add("Другая");
+        GravityArrayAdapter<String> groupAdapter = new GravityArrayAdapter<>(this, android.R.layout.simple_spinner_item, groups2);
+        groupAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        groupAdapter.setGravity(Gravity.CENTER);
+        Spinner groupSpinner = asd2.addView(new Spinner(this));
+        groupSpinner.setAdapter(groupAdapter);
+        groupSpinner.setPrompt("Устройство");
+
+
         EditText group = asd2.addTextInput("Группа");
         group.setSingleLine(true);
 
@@ -104,22 +142,9 @@ public class ListActivity extends AppCompatActivity {
             devicesString.add(d.name);
         }
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, devicesString){
-            @Override
-            public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-                View dropDownView = super.getDropDownView(position, convertView, parent);
-                ((TextView)dropDownView).setGravity(Gravity.CENTER);
-                return dropDownView;
-            }
-
-            @NonNull
-            @Override
-            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-                View view = super.getView(position, convertView, parent);
-                ((TextView)view).setGravity(Gravity.CENTER);
-                return view;
-            }
-        };
+        GravityArrayAdapter<String> typeAdapter = new GravityArrayAdapter<>(this, android.R.layout.simple_spinner_item, devicesString);
+        typeAdapter.setGravity(Gravity.CENTER);
+        typeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         List<Out> outs = new ArrayList<>();
 
         LinearLayout outsLayout = asd2.addView(new LinearLayout(this));
@@ -129,17 +154,16 @@ public class ListActivity extends AppCompatActivity {
         layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT;
         outsLayout.setLayoutParams(layoutParams);
 
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        Spinner spinner = asd2.addView(new Spinner(this));
-        spinner.setAdapter(adapter);
-        spinner.setPrompt("Устройство");
-        spinner.setSelection(0);
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        Spinner type = asd2.addView(new Spinner(this));
+        type.setAdapter(typeAdapter);
+        type.setPrompt("Устройство");
+        type.setSelection(0);
+        type.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 outsLayout.removeAllViews();
                 outs.clear();
-                Devices devices = Devices.values()[spinner.getSelectedItemPosition()];
+                Devices devices = Devices.values()[type.getSelectedItemPosition()];
                 for(Out o : devices.outs){
                     CheckBox cb = new CheckBox(view.getContext());
                     cb.setOnCheckedChangeListener((compoundButton, b) -> {
@@ -158,15 +182,23 @@ public class ListActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> adapterView) {}
         });
 
+
         Button doneButton = asd2.addButton("Создать", () -> {
             long id = System.currentTimeMillis();
-            Device d = new Device(name.getText().toString(), group.getText().toString(), id, Devices.values()[spinner.getSelectedItemPosition()]);
+            Device d = new Device(name.getText().toString(),
+                    groupSpinner.getSelectedItemPosition() != groupSpinner.getCount()-1 ?
+                            groups2.get(groupSpinner.getSelectedItemPosition()) :
+                            group.getText().toString(),
+                    id, Devices.values()[type.getSelectedItemPosition()]);
             d.getOuts().addAll(outs);
             Lab240.getDevices().add(d);
             ga.setData(Lab240.getDevices());
             Lab240.saveDevices(this, Lab240.getDevices());
         }, AlertSheetDialog.ButtonType.DEFAULT);
-        name.addTextChangedListener(new TextWatcher() {
+
+        Runnable check = ()->doneButton.setEnabled(name.getText().length() != 0 && (groupSpinner.getSelectedItemPosition() != groupSpinner.getCount()-1 || group.getText().length() != 0));
+
+        TextWatcher tw = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
 
@@ -175,9 +207,26 @@ public class ListActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable editable) {
-                doneButton.setEnabled(!editable.toString().isEmpty());
+                check.run();
+            }
+        };
+        name.addTextChangedListener(tw);
+        group.addTextChangedListener(tw);
+
+        groupSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                group.setVisibility(groupSpinner.getSelectedItemPosition() != groupSpinner.getCount()-1 ? View.GONE : View.VISIBLE);
+                check.run();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+                check.run();
             }
         });
+        groupSpinner.setSelection(0);
+
         asd2.show();
     }
 
@@ -195,19 +244,17 @@ public class ListActivity extends AppCompatActivity {
         asd.setCancelable(false);
         asd.setCloseOnAction(false);
         asd.addText(getResources().getString(R.string.no_connection));
-        asd.addButton("Подключиться", ()->{
-            Lab240.getMqtt().connect(this, new IMqttActionListener() {
-                @Override
-                public void onSuccess(IMqttToken asyncActionToken) {
-                    ga.setData(Lab240.getDevices());
-                    asd.dismiss();
-                }
+        asd.addButton("Подключиться", ()-> Lab240.getMqtt().connect(this, new IMqttActionListener() {
+            @Override
+            public void onSuccess(IMqttToken asyncActionToken) {
+                ga.setData(Lab240.getDevices());
+                asd.dismiss();
+            }
 
-                @Override
-                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                }
-            });
-        }, AlertSheetDialog.ButtonType.DEFAULT);
+            @Override
+            public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+            }
+        }), AlertSheetDialog.ButtonType.DEFAULT);
         asd.addButton("Выйти", this::exit, AlertSheetDialog.ButtonType.DESTROY);
         asd.show();
     }

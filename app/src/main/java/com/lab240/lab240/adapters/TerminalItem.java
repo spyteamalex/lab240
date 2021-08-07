@@ -7,7 +7,7 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class TerminalItem extends RecyclerView.ViewHolder {
-
+    
     final TextView titleView;
 
     public TerminalItem(final View itemView) {
