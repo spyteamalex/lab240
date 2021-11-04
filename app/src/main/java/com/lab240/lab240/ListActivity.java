@@ -110,7 +110,7 @@ public class ListActivity extends AppCompatActivity {
         if(item.getItemId() == R.id.add) {
             addDevice();
         }else if(item.getItemId() == R.id.exit){
-                exit();
+            exit();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -125,7 +125,7 @@ public class ListActivity extends AppCompatActivity {
             groups.add(d.getGroup());
         }
         List<String> groups2 = new ArrayList<>(groups);
-        groups2.add("Другая");
+        groups2.add("Новая группа");
         GravityArrayAdapter<String> groupAdapter = new GravityArrayAdapter<>(this, android.R.layout.simple_spinner_item, groups2);
         groupAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         groupAdapter.setGravity(Gravity.CENTER);
@@ -277,6 +277,6 @@ public class ListActivity extends AppCompatActivity {
 
     private void exit(){
         Lab240.exit(this);
-        System.exit(0);
+        finish();
     }
 }

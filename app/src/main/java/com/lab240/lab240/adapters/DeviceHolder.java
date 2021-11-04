@@ -98,7 +98,7 @@ public class DeviceHolder extends RecyclerView.ViewHolder{
                 AlertSheetDialog asd2 = new AlertSheetDialog(view.getContext());
 
                 List<String> groups2 = new ArrayList<>(groups);
-                groups2.add("Другая");
+                groups2.add("Новая группа");
                 GravityArrayAdapter<String> adapter = new GravityArrayAdapter<>(itemView.getContext(), android.R.layout.simple_spinner_item, groups2);
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 adapter.setGravity(Gravity.CENTER);
