@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.lab240.devices.Hint;
@@ -35,11 +36,11 @@ public class HintAdapter extends RecyclerView.Adapter<HintItem> {
                 AlertSheetDialog asd = new AlertSheetDialog(holder.itemView.getContext());
                 for (String h : group.getCommands()) {
                     CommandManager cm = new CommandManager(h);
-                    asd.addButton(cm.getTemplate(), () -> {
+                    asd.addButton(cm.getTemplate(), btn -> {
                         if (clickListener != null) clickListener.handle(h);
                     }, AlertSheetDialog.ButtonType.DEFAULT);
                 }
-                asd.show();
+                asd.show(fm, "");
                 System.out.println("hmm");
             });
         }
@@ -59,10 +60,12 @@ public class HintAdapter extends RecyclerView.Adapter<HintItem> {
 
     final ArrayList<Hint> groups = new ArrayList<>();
 
-    public HintAdapter(@Nullable ClickListener clickListener) {
+    public HintAdapter(FragmentManager fm, @Nullable ClickListener clickListener) {
         this.clickListener = clickListener;
+        this.fm = fm;
     }
 
+    final FragmentManager fm;
     final @Nullable ClickListener clickListener;
 
     public void setData(Collection<Hint> items){

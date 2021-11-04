@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.common.collect.Multimap;
@@ -23,23 +24,25 @@ import java.util.Map;
 
 public class DeviceAdapter extends RecyclerView.Adapter<DeviceHolder>{
 
-    public DeviceAdapter(List<String> groups, Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters, Map<Pair<String, Out>, String> values, @Nullable DeviceHolder.TerminalCaller tc, @Nullable Runnable update) {
+    public DeviceAdapter(FragmentManager fm, List<String> groups, Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters, Map<Pair<String, Out>, String> values, @Nullable DeviceHolder.TerminalCaller tc, @Nullable Runnable update) {
         this.update = update;
         this.values = values;
         this.updaters = updaters;
         this.tc = tc;
         this.groups = groups;
+        this.fm = fm;
     }
 
     private final Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters;
     private final Map<Pair<String, Out>, String> values;
     private final @Nullable DeviceHolder.TerminalCaller tc;
     private final List<String> groups;
+    private final FragmentManager fm;
 
     @NonNull
     @Override
     public DeviceHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new DeviceHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_device, parent, false), groups, updaters, values, tc, update);
+        return new DeviceHolder(fm,LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_device, parent, false), groups, updaters, values, tc, update);
     }
 
     @Override

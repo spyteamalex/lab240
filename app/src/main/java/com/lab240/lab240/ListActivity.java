@@ -45,7 +45,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 public class ListActivity extends AppCompatActivity {
 
@@ -81,9 +80,9 @@ public class ListActivity extends AppCompatActivity {
         if(!Lab240.isInited())
             finish();
 
-        RecyclerView rv = findViewById(R.id.groups);
+        RecyclerView groups = findViewById(R.id.groups);
         Container<Runnable> update = new Container<>(null);
-        ga = new GroupAdapter((device)->{
+        ga = new GroupAdapter(getSupportFragmentManager(), (device)->{
             if(!hasWindowFocus())
                 return;
             Intent i = new Intent(this, TerminalActivity.class);
@@ -94,7 +93,7 @@ public class ListActivity extends AppCompatActivity {
             consoleLauncher.launch(i);
         },() -> update.get().run());
         update.set(()->ga.setData(Lab240.getDevices()));
-        rv.setAdapter(ga);
+        groups.setAdapter(ga);
         ga.setData(Lab240.getDevices());
         lcc = cause -> handleNoConnection();
     }
@@ -117,6 +116,7 @@ public class ListActivity extends AppCompatActivity {
 
     public void addDevice(){
         AlertSheetDialog asd2 = new AlertSheetDialog(this);
+        asd2.show(getSupportFragmentManager(), "");
         EditText name = asd2.addTextInput("Название");
         name.setSingleLine(true);
 
@@ -150,9 +150,7 @@ public class ListActivity extends AppCompatActivity {
         LinearLayout outsLayout = asd2.addView(new LinearLayout(this));
         outsLayout.setOrientation(LinearLayout.VERTICAL);
         outsLayout.setGravity(Gravity.CENTER);
-        ViewGroup.LayoutParams layoutParams = outsLayout.getLayoutParams();
-        layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT;
-        outsLayout.setLayoutParams(layoutParams);
+        outsLayout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
         Spinner type = asd2.addView(new Spinner(this));
         type.setAdapter(typeAdapter);
@@ -183,7 +181,7 @@ public class ListActivity extends AppCompatActivity {
         });
 
 
-        Button doneButton = asd2.addButton("Создать", () -> {
+        Button doneButton = asd2.addButton("Создать", btn -> {
             long id = System.currentTimeMillis();
             Device d = new Device(name.getText().toString(),
                     groupSpinner.getSelectedItemPosition() != groupSpinner.getCount()-1 ?
@@ -226,8 +224,6 @@ public class ListActivity extends AppCompatActivity {
             }
         });
         groupSpinner.setSelection(0);
-
-        asd2.show();
     }
 
     @Override
@@ -244,7 +240,7 @@ public class ListActivity extends AppCompatActivity {
         asd.setCancelable(false);
         asd.setCloseOnAction(false);
         asd.addText(getResources().getString(R.string.no_connection));
-        asd.addButton("Подключиться", ()-> Lab240.getMqtt().connect(this, new IMqttActionListener() {
+        asd.addButton("Подключиться", btn-> Lab240.getMqtt().connect(this, new IMqttActionListener() {
             @Override
             public void onSuccess(IMqttToken asyncActionToken) {
                 ga.setData(Lab240.getDevices());
@@ -252,11 +248,10 @@ public class ListActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-            }
+            public void onFailure(IMqttToken asyncActionToken, Throwable exception) {}
         }), AlertSheetDialog.ButtonType.DEFAULT);
-        asd.addButton("Выйти", this::exit, AlertSheetDialog.ButtonType.DESTROY);
-        asd.show();
+        asd.addButton("Выйти", btn->exit(), AlertSheetDialog.ButtonType.DESTROY);
+        asd.show(getSupportFragmentManager(), "");
     }
 
     private MQTT.LostConnectionCallback lcc = null;

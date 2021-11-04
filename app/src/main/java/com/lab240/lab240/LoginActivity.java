@@ -45,7 +45,7 @@ public class LoginActivity extends AppCompatActivity {
         Optional<Lab240.Config> config = Lab240.getConfig(this);
         Lab240.Config conf;
         if((conf = config.orNull()) != null){
-            check(conf.name, conf.pass, conf.devices);
+            check(conf.name, conf.pass, conf.devices, true);
         }else{
             loginLayout.setVisibility(View.VISIBLE);
             progressBar.setVisibility(View.GONE);
@@ -54,10 +54,10 @@ public class LoginActivity extends AppCompatActivity {
 
 
     protected void next(View v){
-        check(name.getText().toString(), pass.getText().toString(), Collections.emptyList());
+        check(name.getText().toString(), pass.getText().toString(), Collections.emptyList(), true);
     }
 
-    protected void check(String name, String pass, List<Device> devices){
+    protected void check(String name, String pass, List<Device> devices, boolean openFailDialog){
         loginLayout.setVisibility(View.GONE);
         progressBar.setVisibility(View.VISIBLE);
 
@@ -79,10 +79,14 @@ public class LoginActivity extends AppCompatActivity {
             public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
                 loginLayout.setVisibility(View.VISIBLE);
                 progressBar.setVisibility(View.GONE);
-                AlertSheetDialog asd = new AlertSheetDialog(LoginActivity.this);
-                asd.addText(getResources().getString(R.string.login_fail));
-                asd.setCancelButtonText("Ok", AlertSheetDialog.ButtonType.DEFAULT);
-                asd.show();
+                if(openFailDialog) {
+                    AlertSheetDialog asd = new AlertSheetDialog(LoginActivity.this);
+                    asd.setCloseOnAction(false);
+                    asd.addText(getResources().getString(R.string.login_fail));
+                    asd.addButton("Попробовать еще раз", btn -> check(name, pass, devices, false), AlertSheetDialog.ButtonType.DEFAULT);
+                    asd.setCancelButtonText("Отмена", AlertSheetDialog.ButtonType.DESTROY);
+                    asd.show(getSupportFragmentManager(), "");
+                }
             }
         });
     }

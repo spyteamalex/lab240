@@ -5,9 +5,11 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -98,7 +100,7 @@ public class TerminalActivity extends AppCompatActivity {
             send(c);
         });
 
-        HintAdapter hintAdapter = new HintAdapter(str -> {
+        HintAdapter hintAdapter = new HintAdapter(getSupportFragmentManager(), str -> {
             CommandManager cm = new CommandManager(str);
             List<String> parameters = cm.getParameters();
             if(parameters.isEmpty()) {
@@ -113,14 +115,14 @@ public class TerminalActivity extends AppCompatActivity {
                     e.setSingleLine(true);
                     fields.add(e);
                 }
-                asd.addButton("Отправить", ()->{
+                asd.addButton("Отправить", v->{
                     List<String> pars = new ArrayList<>();
                     for(EditText e : fields){
                         pars.add(e.getText().toString());
                     }
                     send(cm.getResult(pars));
                 }, AlertSheetDialog.ButtonType.DEFAULT);
-                asd.show();
+                asd.show(getSupportFragmentManager(), "");
             }
         });
         hintAdapter.setData(Arrays.asList(this.type.hints));
@@ -178,7 +180,7 @@ public class TerminalActivity extends AppCompatActivity {
         asd.setCancelable(false);
         asd.setCloseOnAction(false);
         asd.addText(getResources().getString(R.string.no_connection));
-        asd.addButton("Подключиться", ()-> Lab240.getMqtt().connect(this, new IMqttActionListener() {
+        asd.addButton("Подключиться", v-> Lab240.getMqtt().connect(this, new IMqttActionListener() {
             @Override
             public void onSuccess(IMqttToken asyncActionToken) {
                 prepareTopics();
@@ -188,11 +190,12 @@ public class TerminalActivity extends AppCompatActivity {
             @Override
             public void onFailure(IMqttToken asyncActionToken, Throwable exception) {}
         }), AlertSheetDialog.ButtonType.DEFAULT);
-        asd.addButton("Выйти", ()->{
+        asd.addButton("Выйти", v->{
+            v.setEnabled(false);
             Lab240.exit(this);
             System.exit(0);
         }, AlertSheetDialog.ButtonType.DESTROY);
-        asd.show();
+        asd.show(getSupportFragmentManager(), "");
     }
 
     private MQTT.LostConnectionCallback lcc = null;

@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -38,7 +39,7 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder>{
     @NonNull
     @Override
     public GroupHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new GroupHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_group, parent, false), groups, updaters, values, tc, update);
+        return new GroupHolder(fm, LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_group, parent, false), groups, updaters, values, tc, update);
     }
 
     @Override
@@ -59,10 +60,12 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder>{
     private final Map<Pair<String, Out>, String> values = new HashMap<>();
     private final List<String> groups = new ArrayList<>();
     private final @Nullable DeviceHolder.TerminalCaller tc;
+    private final FragmentManager fm;
 
-    public GroupAdapter(@Nullable DeviceHolder.TerminalCaller tc, @Nullable Runnable update) {
+    public GroupAdapter(FragmentManager fm, @Nullable DeviceHolder.TerminalCaller tc, @Nullable Runnable update) {
         this.update = update;
         this.tc = tc;
+        this.fm = fm;
     }
 
     private final @Nullable

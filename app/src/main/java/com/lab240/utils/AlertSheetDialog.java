@@ -1,10 +1,14 @@
 package com.lab240.utils;
 
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.res.Configuration;
 import android.graphics.Color;
+import android.os.Bundle;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -12,44 +16,72 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.content.res.AppCompatResources;
+import androidx.fragment.app.FragmentManager;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.lab240.lab240.R;
 
-public class AlertSheetDialog extends BottomSheetDialog {
+import java.util.ArrayList;
+import java.util.List;
+
+public class AlertSheetDialog extends BottomSheetDialogFragment {
     public enum ButtonType{
         DEFAULT, DESTROY;
     }
     LinearLayout layout, cancelLL;
     View v;
-    Context c;
     Button cancel;
+    String cancelText = "Отмена";
+    ButtonType cancelType = ButtonType.DESTROY;
+    Context c;
+    private final List<View> views = new ArrayList<>();
+    private Runnable onShow = null;
+    View.OnClickListener cancelAction = v->{};
+
+    public AlertSheetDialog(Context c) {
+        super();
+        this.c = c;
+    }
 
     private static final int PADDING = 20;
-    public AlertSheetDialog(@NonNull Context c) {
-        super(c);
-        this.c = c;
-        setCancelable(true);
-        v = LayoutInflater.from(c).inflate( R.layout.inflate_bottom_sheet, findViewById(R.id.bottomSheetContainer), false);
-        setContentView(v);
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        v = inflater.inflate(R.layout.inflate_bottom_sheet, container, false);
         layout = v.findViewById(R.id.buttons);
         cancelLL = v.findViewById(R.id.cancelLL);
-        getBehavior().setState(BottomSheetBehavior.STATE_EXPANDED);
-        getBehavior().setSkipCollapsed(true);
-        getBehavior().setHideable(false);
-        setCancelable(cancelable);
-
+        Context c = inflater.getContext();
         cancel = new Button(c);
-        cancel.setText("Отмена");
         cancel.setBackgroundColor(Color.TRANSPARENT);
         cancel.setAllCaps(false);
         cancel.setTextSize(16);
         cancel.setOnClickListener(v->dismiss());
         int padding = Converter.dpToPx(c, PADDING);
         cancel.setPadding(padding,padding,padding,padding);
-        cancel.setTextColor(c.getResources().getColor(R.color.highlighted));
+        setCancelButtonText(cancelText, cancelType);
         cancelLL.addView(cancel);
+        getDialog().setOnShowListener(dialogInterface -> {
+            BottomSheetDialog bottomSheetDialog = (BottomSheetDialog) dialogInterface;
+            bottomSheetDialog.getBehavior().setState(BottomSheetBehavior.STATE_EXPANDED);
+            bottomSheetDialog.getBehavior().setSkipCollapsed(true);
+            bottomSheetDialog.getBehavior().setHideable(false);
+            bottomSheetDialog.getBehavior().setDraggable(false);
+            if(onShow != null)
+                onShow.run();
+        });
+        push();
+        setCancelable(cancelable);
+        setCancelAction(cancelAction);
+        return v;
+    }
+
+    public void show(@NonNull FragmentManager manager, @Nullable String tag, Runnable onShow) {
+        super.show(manager, tag);
+        this.onShow = onShow;
     }
 
     public boolean isCancelable() {
@@ -69,12 +101,16 @@ public class AlertSheetDialog extends BottomSheetDialog {
     private boolean closeOnAction = true;
 
     public void setCancelButtonText(String s, ButtonType type){
-        cancel.setText(s);
+        cancelText = s;
+        cancelType = type;
+        if(cancel != null) {
+            cancel.setText(s);
 
-        if(type == ButtonType.DEFAULT){
-            cancel.setTextColor(c.getResources().getColor(R.color.highlighted));
-        }else if(type == ButtonType.DESTROY){
-            cancel.setTextColor(Color.RED);
+            if(type == ButtonType.DEFAULT){
+                cancel.setTextColor(AppCompatResources.getColorStateList(c,R.color.alert_sheet_dialog_button_default));
+            }else if(type == ButtonType.DESTROY){
+                cancel.setTextColor(AppCompatResources.getColorStateList(c,R.color.alert_sheet_dialog_button_destroy));
+            }
         }
     }
 
@@ -85,14 +121,22 @@ public class AlertSheetDialog extends BottomSheetDialog {
         if(cancelLL != null) cancelLL.setVisibility(cancelable ? View.VISIBLE : View.GONE);
     }
 
-    public void setCancelAction(Runnable r){
-        cancel.setOnClickListener(v2->{
-            r.run();
+    public void setCancelAction(View.OnClickListener r){
+        cancelAction = r;
+        if(cancel != null) cancel.setOnClickListener(v2->{
+            if(r != null) r.onClick(v2);
             dismiss();
         });
     }
 
-    public Button addButton(String text, @Nullable Runnable runnable, ButtonType type){
+    @Override
+    public void onCancel(@NonNull DialogInterface dialog) {
+        super.onCancel(dialog);
+        if(cancelAction != null)
+            cancelAction.onClick(cancel);
+    }
+
+    public Button addButton(String text, @Nullable Button.OnClickListener runnable, ButtonType type){
         Button button = new Button(c);
         button.setText(text);
         button.setBackgroundColor(Color.TRANSPARENT);
@@ -102,15 +146,16 @@ public class AlertSheetDialog extends BottomSheetDialog {
         button.setPadding(padding,padding,padding,padding);
         button.setOnClickListener(v -> {
             if(closeOnAction) dismiss();
-            if(runnable != null) runnable.run();
+            if(runnable != null) runnable.onClick(button);
         });
         if(type == ButtonType.DEFAULT){
-            button.setTextColor(c.getResources().getColor(R.color.highlighted));
+            button.setTextColor(AppCompatResources.getColorStateList(c,R.color.alert_sheet_dialog_button_default));
         }else if(type == ButtonType.DESTROY){
-            button.setTextColor(Color.RED);
+            button.setTextColor(AppCompatResources.getColorStateList(c,R.color.alert_sheet_dialog_button_destroy));
         }
 
-        layout.addView(button);
+        views.add(button);
+        push();
         return button;
     }
 
@@ -122,7 +167,8 @@ public class AlertSheetDialog extends BottomSheetDialog {
         editText.setGravity(Gravity.CENTER);
         int padding = Converter.dpToPx(c, PADDING);
         editText.setPadding(padding,padding,padding,padding);
-        layout.addView(editText);
+        views.add(editText);
+        push();
         return editText;
     }
 
@@ -133,7 +179,8 @@ public class AlertSheetDialog extends BottomSheetDialog {
         int padding = Converter.dpToPx(c, PADDING);
         tv.setPadding(padding,padding,padding,padding);
         tv.setGravity(Gravity.CENTER);
-        layout.addView(tv);
+        views.add(tv);
+        push();
         return tv;
     }
 
@@ -141,7 +188,17 @@ public class AlertSheetDialog extends BottomSheetDialog {
     public <T extends View> T addView(T v){
         int padding = Converter.dpToPx(c, PADDING);
         v.setPadding(padding,padding,padding,padding);
-        layout.addView(v);
+        views.add(v);
+        push();
         return v;
+    }
+
+    private void push() {
+        if(layout != null){
+            for(View v : views){
+                layout.addView(v);
+            }
+            views.clear();
+        }
     }
 }

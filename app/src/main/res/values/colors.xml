@@ -13,6 +13,8 @@
     <color name="primary">#FFFFFFFF</color>
     <color name="secondary">#F2F3F7</color>
     <color name="highlighted">#44A9FF</color>
-    <color name="highlighted_light">#7CC3FF</color>
+    <color name="highlighted_light">#8BCAFF</color>
+    <color name="destroy">#ff0000</color>
+    <color name="destroy_light">#FF6060</color>
     <color name="tririchny">#CCCCCC</color>
 </resources>
