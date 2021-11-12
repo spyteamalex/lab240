@@ -13,4 +13,4 @@
     android:background="@drawable/hint_background"
     android:fontFamily="@font/allerta"
     android:padding="10dp"
-    android:text="sh time"></TextView>
+    android:text="@string/command" />

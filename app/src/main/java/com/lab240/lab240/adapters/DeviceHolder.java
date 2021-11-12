@@ -76,12 +76,12 @@ public class DeviceHolder extends RecyclerView.ViewHolder{
             v.vibrate(25);
 
             AlertSheetDialog asd = new AlertSheetDialog(itemView.getContext());
-            asd.addButton("Переименовать", btn->{
+            asd.addButton(itemView.getResources().getString(R.string.rename), btn->{
                 AlertSheetDialog asd2 = new AlertSheetDialog(itemView.getContext());
-                EditText name = asd2.addTextInput("Название");
+                EditText name = asd2.addTextInput(itemView.getResources().getString(R.string.name));
                 name.setSingleLine(true);
                 name.setText(item.getName());
-                Button doneButton = asd2.addButton("Переименовать", btn2 -> {
+                Button doneButton = asd2.addButton(itemView.getResources().getString(R.string.rename), btn2 -> {
                     item.setName(name.getText().toString());
                     if(update != null) update.run();
                     Lab240.saveDevices(view.getContext(), Lab240.getDevices());
@@ -100,22 +100,22 @@ public class DeviceHolder extends RecyclerView.ViewHolder{
                 });
                 asd2.show(fm, "");
             }, AlertSheetDialog.ButtonType.DEFAULT);
-            asd.addButton("Переместить в", btn->{
+            asd.addButton(itemView.getResources().getString(R.string.move), btn->{
                 AlertSheetDialog asd2 = new AlertSheetDialog(itemView.getContext());
 
                 List<String> groups2 = new ArrayList<>(groups);
-                groups2.add("Новая группа");
+                groups2.add(itemView.getResources().getString(R.string.new_group));
                 GravityArrayAdapter<String> adapter = new GravityArrayAdapter<>(itemView.getContext(), android.R.layout.simple_spinner_item, groups2);
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 adapter.setGravity(Gravity.CENTER);
                 Spinner spinner = asd2.addView(new Spinner(itemView.getContext()));
                 spinner.setAdapter(adapter);
-                spinner.setPrompt("Устройство");
+                spinner.setPrompt(itemView.getResources().getString(R.string.device));
 
-                EditText group = asd2.addTextInput("Группа");
+                EditText group = asd2.addTextInput(itemView.getResources().getString(R.string.group_name));
                 group.setSingleLine(true);
                 group.setText(item.getGroup());
-                Button done = asd2.addButton("Переместить", btn2-> {
+                Button done = asd2.addButton("", btn2-> {
                     item.setGroup(spinner.getSelectedItemPosition() == spinner.getCount()-1 ? group.getText().toString() : groups2.get(spinner.getSelectedItemPosition()));
                     if(update != null) update.run();
                     Lab240.saveDevices(view.getContext(), Lab240.getDevices());
@@ -156,7 +156,7 @@ public class DeviceHolder extends RecyclerView.ViewHolder{
 
                 asd2.show(fm, "");
             }, AlertSheetDialog.ButtonType.DEFAULT);
-            asd.addButton("Изменить каналы", btn->{
+            asd.addButton(itemView.getResources().getString(R.string.change_channels), btn->{
                 AlertSheetDialog asd2 = new AlertSheetDialog(itemView.getContext());
                 Set<Out> outs = new TreeSet<>(item.getOuts());
 
@@ -180,7 +180,7 @@ public class DeviceHolder extends RecyclerView.ViewHolder{
                     cb.setText(o.getName());
                     outsLayout.addView(cb);
                 }
-                Button doneButton = asd2.addButton("Изменить", btn2 -> {
+                Button doneButton = asd2.addButton(itemView.getResources().getString(R.string.change), btn2 -> {
                     item.getOuts().clear();
                     item.getOuts().addAll(outs);
                     if(update != null) update.run();
@@ -188,12 +188,12 @@ public class DeviceHolder extends RecyclerView.ViewHolder{
                 }, AlertSheetDialog.ButtonType.DEFAULT);
                 asd2.show(fm, "");
             }, AlertSheetDialog.ButtonType.DEFAULT);
-            asd.addButton("Удалить", btn->{
+            asd.addButton(itemView.getResources().getString(R.string.delete), btn->{
                 Lab240.getDevices().remove(item);
                 if(update != null) update.run();
                 Lab240.saveDevices(view.getContext(), Lab240.getDevices());
             }, AlertSheetDialog.ButtonType.DESTROY);
-            asd.setCancelAction(view1 -> itemView.setClickable(true));
+            asd.setDismissAction(() -> itemView.setClickable(true));
             asd.show(fm, "");
             return false;
         });

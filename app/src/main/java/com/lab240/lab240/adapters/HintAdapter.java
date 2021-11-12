@@ -41,7 +41,6 @@ public class HintAdapter extends RecyclerView.Adapter<HintItem> {
                     }, AlertSheetDialog.ButtonType.DEFAULT);
                 }
                 asd.show(fm, "");
-                System.out.println("hmm");
             });
         }
     }

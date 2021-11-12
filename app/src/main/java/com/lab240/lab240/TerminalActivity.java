@@ -115,7 +115,7 @@ public class TerminalActivity extends AppCompatActivity {
                     e.setSingleLine(true);
                     fields.add(e);
                 }
-                asd.addButton("Отправить", v->{
+                asd.addButton(getResources().getString(R.string.send), v->{
                     List<String> pars = new ArrayList<>();
                     for(EditText e : fields){
                         pars.add(e.getText().toString());
@@ -180,7 +180,7 @@ public class TerminalActivity extends AppCompatActivity {
         asd.setCancelable(false);
         asd.setCloseOnAction(false);
         asd.addText(getResources().getString(R.string.no_connection));
-        asd.addButton("Подключиться", v-> Lab240.getMqtt().connect(this, new IMqttActionListener() {
+        asd.addButton(getResources().getString(R.string.connect), v-> Lab240.getMqtt().connect(this, new IMqttActionListener() {
             @Override
             public void onSuccess(IMqttToken asyncActionToken) {
                 prepareTopics();
@@ -190,7 +190,7 @@ public class TerminalActivity extends AppCompatActivity {
             @Override
             public void onFailure(IMqttToken asyncActionToken, Throwable exception) {}
         }), AlertSheetDialog.ButtonType.DEFAULT);
-        asd.addButton("Выйти", v->{
+        asd.addButton(getResources().getString(R.string.exit), v->{
             v.setEnabled(false);
             Lab240.exit(this);
             System.exit(0);

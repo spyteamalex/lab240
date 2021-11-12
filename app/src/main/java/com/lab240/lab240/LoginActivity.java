@@ -83,8 +83,8 @@ public class LoginActivity extends AppCompatActivity {
                     AlertSheetDialog asd = new AlertSheetDialog(LoginActivity.this);
                     asd.setCloseOnAction(false);
                     asd.addText(getResources().getString(R.string.login_fail));
-                    asd.addButton("Попробовать еще раз", btn -> check(name, pass, devices, false), AlertSheetDialog.ButtonType.DEFAULT);
-                    asd.setCancelButtonText("Отмена", AlertSheetDialog.ButtonType.DESTROY);
+                    asd.addButton(getResources().getString(R.string.try_again), btn -> check(name, pass, devices, false), AlertSheetDialog.ButtonType.DEFAULT);
+                    asd.setCancelButtonText(getResources().getString(R.string.cancel), AlertSheetDialog.ButtonType.DESTROY);
                     asd.show(getSupportFragmentManager(), "");
                 }
             }

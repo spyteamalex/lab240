@@ -34,12 +34,13 @@ public class AlertSheetDialog extends BottomSheetDialogFragment {
     LinearLayout layout, cancelLL;
     View v;
     Button cancel;
-    String cancelText = "Отмена";
+    String cancelText = null;
     ButtonType cancelType = ButtonType.DESTROY;
     Context c;
     private final List<View> views = new ArrayList<>();
     private Runnable onShow = null;
     View.OnClickListener cancelAction = v->{};
+    Runnable dismissAction = ()->{};
 
     public AlertSheetDialog(Context c) {
         super();
@@ -62,6 +63,8 @@ public class AlertSheetDialog extends BottomSheetDialogFragment {
         cancel.setOnClickListener(v->dismiss());
         int padding = Converter.dpToPx(c, PADDING);
         cancel.setPadding(padding,padding,padding,padding);
+        if(cancelText == null)
+            cancelText = getResources().getString(R.string.cancel);
         setCancelButtonText(cancelText, cancelType);
         cancelLL.addView(cancel);
         getDialog().setOnShowListener(dialogInterface -> {
@@ -76,6 +79,7 @@ public class AlertSheetDialog extends BottomSheetDialogFragment {
         push();
         setCancelable(cancelable);
         setCancelAction(cancelAction);
+        setDismissAction(dismissAction);
         return v;
     }
 
@@ -115,6 +119,12 @@ public class AlertSheetDialog extends BottomSheetDialogFragment {
     }
 
     @Override
+    public void dismiss() {
+        super.dismiss();
+        dismissAction.run();
+    }
+
+    @Override
     public void setCancelable(boolean cancelable) {
         super.setCancelable(cancelable);
         this.cancelable = cancelable;
@@ -129,11 +139,15 @@ public class AlertSheetDialog extends BottomSheetDialogFragment {
         });
     }
 
+    public void setDismissAction(Runnable r){
+        dismissAction = r;
+    }
+
     @Override
     public void onCancel(@NonNull DialogInterface dialog) {
         super.onCancel(dialog);
-        if(cancelAction != null)
-            cancelAction.onClick(cancel);
+        cancelAction.onClick(cancel);
+        dismissAction.run();
     }
 
     public Button addButton(String text, @Nullable Button.OnClickListener runnable, ButtonType type){

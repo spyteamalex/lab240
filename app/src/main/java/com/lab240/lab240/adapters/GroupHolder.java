@@ -41,12 +41,12 @@ public class GroupHolder extends RecyclerView.ViewHolder{
             Vibrator v = (Vibrator) view.getContext().getSystemService(Context.VIBRATOR_SERVICE);
             v.vibrate(25);
             AlertSheetDialog asd = new AlertSheetDialog(itemView.getContext());
-            asd.addButton("Переименовать", btn->{
+            asd.addButton(itemView.getResources().getString(R.string.rename), btn->{
                 AlertSheetDialog asd2 = new AlertSheetDialog(itemView.getContext());
-                EditText gr = asd2.addTextInput("Название");
+                EditText gr = asd2.addTextInput(itemView.getResources().getString(R.string.name));
                 gr.setSingleLine(true);
                 gr.setText(group);
-                asd2.addButton("Переименовать", btn2 -> {
+                asd2.addButton(itemView.getResources().getString(R.string.rename), btn2 -> {
                     for(Device d: adapter.devices)
                         d.setGroup(gr.getText().toString());
                     if(update != null) update.run();
@@ -54,7 +54,7 @@ public class GroupHolder extends RecyclerView.ViewHolder{
                 }, AlertSheetDialog.ButtonType.DEFAULT);
                 asd2.show(fm, "");
             }, AlertSheetDialog.ButtonType.DEFAULT);
-            asd.addButton("Удалить", btn->{
+            asd.addButton(itemView.getResources().getString(R.string.delete), btn->{
                 for(Device i : adapter.devices)
                     Lab240.getDevices().remove(i);
                 if(update != null) update.run();

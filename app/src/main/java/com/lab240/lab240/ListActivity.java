@@ -2,6 +2,7 @@ package com.lab240.lab240;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -117,7 +118,7 @@ public class ListActivity extends AppCompatActivity {
     public void addDevice(){
         AlertSheetDialog asd2 = new AlertSheetDialog(this);
         asd2.show(getSupportFragmentManager(), "");
-        EditText name = asd2.addTextInput("Название");
+        EditText name = asd2.addTextInput(getResources().getString(R.string.name));
         name.setSingleLine(true);
 
         Set<String> groups = new HashSet<>();
@@ -125,16 +126,16 @@ public class ListActivity extends AppCompatActivity {
             groups.add(d.getGroup());
         }
         List<String> groups2 = new ArrayList<>(groups);
-        groups2.add("Новая группа");
+        groups2.add(getResources().getString(R.string.new_group));
         GravityArrayAdapter<String> groupAdapter = new GravityArrayAdapter<>(this, android.R.layout.simple_spinner_item, groups2);
         groupAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         groupAdapter.setGravity(Gravity.CENTER);
         Spinner groupSpinner = asd2.addView(new Spinner(this));
         groupSpinner.setAdapter(groupAdapter);
-        groupSpinner.setPrompt("Устройство");
+        groupSpinner.setPrompt(getResources().getString(R.string.device));
 
 
-        EditText group = asd2.addTextInput("Группа");
+        EditText group = asd2.addTextInput(getResources().getString(R.string.group_name));
         group.setSingleLine(true);
 
         List<String> devicesString = new ArrayList<>();
@@ -154,7 +155,7 @@ public class ListActivity extends AppCompatActivity {
 
         Spinner type = asd2.addView(new Spinner(this));
         type.setAdapter(typeAdapter);
-        type.setPrompt("Устройство");
+        type.setPrompt(getResources().getString(R.string.device));
         type.setSelection(0);
         type.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -171,6 +172,7 @@ public class ListActivity extends AppCompatActivity {
                             outs.remove(o);
                         }
                     });
+                    cb.setChecked(true);
                     cb.setText(o.getName());
                     outsLayout.addView(cb);
                 }
@@ -181,7 +183,7 @@ public class ListActivity extends AppCompatActivity {
         });
 
 
-        Button doneButton = asd2.addButton("Создать", btn -> {
+        Button doneButton = asd2.addButton(getResources().getString(R.string.create), btn -> {
             long id = System.currentTimeMillis();
             Device d = new Device(name.getText().toString(),
                     groupSpinner.getSelectedItemPosition() != groupSpinner.getCount()-1 ?
@@ -240,7 +242,7 @@ public class ListActivity extends AppCompatActivity {
         asd.setCancelable(false);
         asd.setCloseOnAction(false);
         asd.addText(getResources().getString(R.string.no_connection));
-        asd.addButton("Подключиться", btn-> Lab240.getMqtt().connect(this, new IMqttActionListener() {
+        asd.addButton(getResources().getString(R.string.connect), btn-> Lab240.getMqtt().connect(this, new IMqttActionListener() {
             @Override
             public void onSuccess(IMqttToken asyncActionToken) {
                 ga.setData(Lab240.getDevices());
@@ -250,7 +252,7 @@ public class ListActivity extends AppCompatActivity {
             @Override
             public void onFailure(IMqttToken asyncActionToken, Throwable exception) {}
         }), AlertSheetDialog.ButtonType.DEFAULT);
-        asd.addButton("Выйти", btn->exit(), AlertSheetDialog.ButtonType.DESTROY);
+        asd.addButton(getResources().getString(R.string.exit), btn->exit(), AlertSheetDialog.ButtonType.DESTROY);
         asd.show(getSupportFragmentManager(), "");
     }
 
