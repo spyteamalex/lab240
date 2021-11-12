@@ -115,7 +115,7 @@ public class DeviceHolder extends RecyclerView.ViewHolder{
                 EditText group = asd2.addTextInput(itemView.getResources().getString(R.string.group_name));
                 group.setSingleLine(true);
                 group.setText(item.getGroup());
-                Button done = asd2.addButton("", btn2-> {
+                Button done = asd2.addButton(itemView.getResources().getString(R.string.move), btn2-> {
                     item.setGroup(spinner.getSelectedItemPosition() == spinner.getCount()-1 ? group.getText().toString() : groups2.get(spinner.getSelectedItemPosition()));
                     if(update != null) update.run();
                     Lab240.saveDevices(view.getContext(), Lab240.getDevices());
