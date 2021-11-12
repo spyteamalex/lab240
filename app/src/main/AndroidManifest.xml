@@ -17,13 +17,13 @@
         android:theme="@style/Theme.Lab240">
         <activity
             android:name=".TerminalActivity"
-            android:configChanges="orientation|screenSize" />
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation" />
         <activity
             android:name=".ListActivity"
-            android:configChanges="orientation|screenSize" />
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation" />
         <activity
             android:name=".LoginActivity"
-            android:configChanges="orientation|screenSize">
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
