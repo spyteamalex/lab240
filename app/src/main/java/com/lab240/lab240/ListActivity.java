@@ -2,7 +2,6 @@ package com.lab240.lab240;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -22,6 +21,7 @@ import android.widget.Spinner;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -32,6 +32,7 @@ import com.lab240.devices.Device;
 import com.lab240.devices.Devices;
 import com.lab240.devices.Out;
 import com.lab240.devices.OutLine;
+import com.lab240.lab240.adapters.DeviceHolder;
 import com.lab240.utils.GravityArrayAdapter;
 import com.lab240.lab240.adapters.GroupAdapter;
 import com.lab240.utils.AlertSheetDialog;
@@ -43,6 +44,7 @@ import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -82,21 +84,54 @@ public class ListActivity extends AppCompatActivity {
             finish();
 
         RecyclerView groups = findViewById(R.id.groups);
-        Container<Runnable> update = new Container<>(null);
-        ga = new GroupAdapter(getSupportFragmentManager(), (device)->{
-            if(!hasWindowFocus())
-                return;
-            Intent i = new Intent(this, TerminalActivity.class);
-            i.putExtra(TerminalActivity.TYPE, device.getType().ordinal());
-            i.putExtra(TerminalActivity.DEVICE, device.getName());
-            i.putExtra(TerminalActivity.ID, device.getId());
-            i.putExtra(TerminalActivity.OUTLINES, Lab240.serializeOutLines(device.getConsoleLasts()));
-            consoleLauncher.launch(i);
-        },() -> update.get().run());
-        update.set(()->ga.setData(Lab240.getDevices()));
+        ga = new GroupAdapter(getSupportFragmentManager(), new DeviceHolder.Functions() {
+            @Override
+            public void call(Device device) {
+                if (!ListActivity.this.hasWindowFocus())
+                    return;
+                Intent i = new Intent(ListActivity.this, TerminalActivity.class);
+                i.putExtra(TerminalActivity.TYPE, device.getType().ordinal());
+                i.putExtra(TerminalActivity.DEVICE, device.getIdentificator());
+                i.putExtra(TerminalActivity.ID, device.getId());
+                i.putExtra(TerminalActivity.OUTLINES, Lab240.serializeOutLines(device.getConsoleLasts()));
+                consoleLauncher.launch(i);
+            }
+
+            @Override
+            public void edit(Device d) {
+                editDevice(d);
+                update();
+            }
+
+            @Override
+            public void delete(Device d) {
+                Lab240.getDevices().remove(d);
+                Lab240.saveDevices(ListActivity.this, Lab240.getDevices());
+                update();
+            }
+
+            @Override
+            public void setGroup(Collection<Device> ds, String str) {
+                for(Device d: ds)
+                    d.setGroup(str);
+                Lab240.saveDevices(ListActivity.this, Lab240.getDevices());
+                update();
+            }
+
+            @Override
+            public void delete(Collection<Device> d) {
+                Lab240.getDevices().removeAll(d);
+                Lab240.saveDevices(ListActivity.this, Lab240.getDevices());
+                update();
+            }
+        });
         groups.setAdapter(ga);
         ga.setData(Lab240.getDevices());
         lcc = cause -> handleNoConnection();
+    }
+
+    public void update(){
+        ga.setData(Lab240.getDevices());
     }
 
     @Override
@@ -108,18 +143,27 @@ public class ListActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if(item.getItemId() == R.id.add) {
-            addDevice();
+            editDevice();
         }else if(item.getItemId() == R.id.exit){
             exit();
         }
         return super.onOptionsItemSelected(item);
     }
 
-    public void addDevice(){
+    public void editDevice(){
+        editDevice(null);
+    }
+
+    public void editDevice(@Nullable Device device){
+        final boolean editing = device != null;
         AlertSheetDialog asd2 = new AlertSheetDialog(this);
         asd2.show(getSupportFragmentManager(), "");
         EditText name = asd2.addTextInput(getResources().getString(R.string.name));
+        if(editing) name.setText(device.getName());
         name.setSingleLine(true);
+        EditText iden = asd2.addTextInput(getResources().getString(R.string.id));
+        iden.setSingleLine(true);
+        if(editing) iden.setText(device.getIdentificator());
 
         Set<String> groups = new HashSet<>();
         for(Device d : Lab240.getDevices()){
@@ -127,16 +171,19 @@ public class ListActivity extends AppCompatActivity {
         }
         List<String> groups2 = new ArrayList<>(groups);
         groups2.add(getResources().getString(R.string.new_group));
+        int gr = editing ? groups2.indexOf(device.getGroup()) : -1;
+        if(gr == -1)
+            gr = groups2.size()-1;
         GravityArrayAdapter<String> groupAdapter = new GravityArrayAdapter<>(this, android.R.layout.simple_spinner_item, groups2);
         groupAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         groupAdapter.setGravity(Gravity.CENTER);
         Spinner groupSpinner = asd2.addView(new Spinner(this));
         groupSpinner.setAdapter(groupAdapter);
-        groupSpinner.setPrompt(getResources().getString(R.string.device));
-
+        groupSpinner.setPrompt(getResources().getString(R.string.group));
 
         EditText group = asd2.addTextInput(getResources().getString(R.string.group_name));
         group.setSingleLine(true);
+        if(editing) group.setText(device.getGroup());
 
         List<String> devicesString = new ArrayList<>();
         for(Devices d : Devices.values()) {
@@ -156,7 +203,6 @@ public class ListActivity extends AppCompatActivity {
         Spinner type = asd2.addView(new Spinner(this));
         type.setAdapter(typeAdapter);
         type.setPrompt(getResources().getString(R.string.device));
-        type.setSelection(0);
         type.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
@@ -172,7 +218,7 @@ public class ListActivity extends AppCompatActivity {
                             outs.remove(o);
                         }
                     });
-                    cb.setChecked(true);
+                    cb.setChecked(!editing || device.getOuts().contains(o));
                     cb.setText(o.getName());
                     outsLayout.addView(cb);
                 }
@@ -182,21 +228,42 @@ public class ListActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> adapterView) {}
         });
 
+        if(editing) type.setSelection(device.getType().ordinal());
+        else type.setSelection(0);
+        type.setEnabled(!editing);
 
-        Button doneButton = asd2.addButton(getResources().getString(R.string.create), btn -> {
-            long id = System.currentTimeMillis();
-            Device d = new Device(name.getText().toString(),
-                    groupSpinner.getSelectedItemPosition() != groupSpinner.getCount()-1 ?
-                            groups2.get(groupSpinner.getSelectedItemPosition()) :
-                            group.getText().toString(),
-                    id, Devices.values()[type.getSelectedItemPosition()]);
-            d.getOuts().addAll(outs);
-            Lab240.getDevices().add(d);
-            ga.setData(Lab240.getDevices());
-            Lab240.saveDevices(this, Lab240.getDevices());
-        }, AlertSheetDialog.ButtonType.DEFAULT);
+        Button doneButton;
+        if(!editing) {
+            doneButton = asd2.addButton(getResources().getString(R.string.create), btn -> {
+                long id = System.currentTimeMillis();
+                Device d = new Device(name.getText().toString(), iden.getText().toString(),
+                        groupSpinner.getSelectedItemPosition() != groupSpinner.getCount() - 1 ?
+                                groups2.get(groupSpinner.getSelectedItemPosition()) :
+                                group.getText().toString(),
+                        id, Devices.values()[type.getSelectedItemPosition()]);
+                d.getOuts().addAll(outs);
+                Lab240.getDevices().add(d);
+                ga.setData(Lab240.getDevices());
+                Lab240.saveDevices(this, Lab240.getDevices());
+            }, AlertSheetDialog.ButtonType.DEFAULT);
+        }else{
+            doneButton = asd2.addButton(getResources().getString(R.string.edit), btn -> {
+                device.getOuts().clear();
+                device.getOuts().addAll(outs);
 
-        Runnable check = ()->doneButton.setEnabled(name.getText().length() != 0 && (groupSpinner.getSelectedItemPosition() != groupSpinner.getCount()-1 || group.getText().length() != 0));
+                device.setName(name.getText().toString());
+                device.setIdentificator(iden.getText().toString());
+                device.setGroup(groupSpinner.getSelectedItemPosition() != groupSpinner.getCount()-1 ?
+                        groups2.get(groupSpinner.getSelectedItemPosition()) :
+                        group.getText().toString());
+
+                ga.setData(Lab240.getDevices());
+                Lab240.saveDevices(this, Lab240.getDevices());
+            }, AlertSheetDialog.ButtonType.DEFAULT);
+        }
+
+
+        Runnable check = ()->doneButton.setEnabled(name.getText().length() != 0 && iden.getText().length() != 0 && (groupSpinner.getSelectedItemPosition() != groupSpinner.getCount()-1 || group.getText().length() != 0));
 
         TextWatcher tw = new TextWatcher() {
             @Override
@@ -225,7 +292,7 @@ public class ListActivity extends AppCompatActivity {
                 check.run();
             }
         });
-        groupSpinner.setSelection(0);
+        groupSpinner.setSelection(gr);
     }
 
     @Override

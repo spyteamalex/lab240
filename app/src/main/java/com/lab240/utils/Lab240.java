@@ -116,7 +116,7 @@ public class Lab240 {
             return "";
         StringBuilder sb = new StringBuilder();
         sb.append("/").append(mqtt.getName());
-        sb.append("/").append(d.getName());
+        sb.append("/").append(d.getIdentificator());
         for(String s : o.getPath())
             sb.append("/").append(s);
         sb.append("/").append(o.getName());

@@ -13,13 +13,10 @@ import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.common.collect.Multimap;
-import com.lab240.devices.Device;
 import com.lab240.devices.Out;
 import com.lab240.lab240.R;
 import com.lab240.utils.AlertSheetDialog;
-import com.lab240.utils.Lab240;
 
-import java.util.List;
 import java.util.Map;
 
 public class GroupHolder extends RecyclerView.ViewHolder{
@@ -30,10 +27,10 @@ public class GroupHolder extends RecyclerView.ViewHolder{
     String group;
 
 
-    public GroupHolder(FragmentManager fm, @NonNull View itemView, List<String> groups, Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters, Map<Pair<String, Out>, String> values, @Nullable DeviceHolder.TerminalCaller tc, @Nullable Runnable update) {
+    public GroupHolder(FragmentManager fm, @NonNull View itemView, Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters, Map<Pair<String, Out>, String> values, @Nullable DeviceHolder.Functions tc) {
         super(itemView);
         devices = itemView.findViewById(R.id.devices);
-        adapter = new DeviceAdapter(fm, groups, updaters, values, tc, update);
+        adapter = new DeviceAdapter(fm, updaters, values, tc);
         devices.setAdapter(adapter);
         name = itemView.findViewById(R.id.name);
 
@@ -46,20 +43,10 @@ public class GroupHolder extends RecyclerView.ViewHolder{
                 EditText gr = asd2.addTextInput(itemView.getResources().getString(R.string.name));
                 gr.setSingleLine(true);
                 gr.setText(group);
-                asd2.addButton(itemView.getResources().getString(R.string.rename), btn2 -> {
-                    for(Device d: adapter.devices)
-                        d.setGroup(gr.getText().toString());
-                    if(update != null) update.run();
-                    Lab240.saveDevices(view.getContext(), Lab240.getDevices());
-                }, AlertSheetDialog.ButtonType.DEFAULT);
+                asd2.addButton(itemView.getResources().getString(R.string.rename), btn2 -> tc.setGroup(adapter.devices, gr.getText().toString()), AlertSheetDialog.ButtonType.DEFAULT);
                 asd2.show(fm, "");
             }, AlertSheetDialog.ButtonType.DEFAULT);
-            asd.addButton(itemView.getResources().getString(R.string.delete), btn->{
-                for(Device i : adapter.devices)
-                    Lab240.getDevices().remove(i);
-                if(update != null) update.run();
-                Lab240.saveDevices(view.getContext(), Lab240.getDevices());
-            }, AlertSheetDialog.ButtonType.DESTROY);
+            asd.addButton(itemView.getResources().getString(R.string.delete), btn-> tc.delete(adapter.devices), AlertSheetDialog.ButtonType.DESTROY);
             asd.show(fm, "");
             return false;
         });

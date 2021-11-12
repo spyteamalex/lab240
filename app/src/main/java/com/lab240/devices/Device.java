@@ -8,9 +8,10 @@ import java.util.TreeSet;
 public class Device {
 
     public static final int SAVE_COUNT = 10;
+    private String identificator;       //Техническое имя устойства
     private String name;
     private String group;
-    private final long id;
+    private final long id;      //Уникальный номер
     private final Devices type;
     private final Set<Out> outs = new TreeSet<>();
 
@@ -20,16 +21,25 @@ public class Device {
 
     private final List<OutLine> consoleLasts = new ArrayList<>();
 
-    public String getName() {
-        return name;
+    public String getIdentificator() {
+        return identificator;
     }
 
     public Devices getType() {
         return type;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public Device setName(String name) {
         this.name = name;
+        return this;
+    }
+
+    public Device setIdentificator(String identificator) {
+        this.identificator = identificator;
         return this;
     }
 
@@ -50,8 +60,9 @@ public class Device {
         return outs;
     }
 
-    public Device(String name, String group, long id, Devices type) {
+    public Device(String name, String identificator, String group, long id, Devices type) {
         this.name = name;
+        this.identificator = identificator;
         this.group = group;
         this.id = id;
         this.type = type;

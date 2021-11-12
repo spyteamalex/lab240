@@ -39,7 +39,7 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder>{
     @NonNull
     @Override
     public GroupHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new GroupHolder(fm, LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_group, parent, false), groups, updaters, values, tc, update);
+        return new GroupHolder(fm, LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_group, parent, false), updaters, values, tc);
     }
 
     @Override
@@ -59,17 +59,14 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder>{
     private final Multimap<Pair<String, Out>, Updater> updaters = ArrayListMultimap.create();
     private final Map<Pair<String, Out>, String> values = new HashMap<>();
     private final List<String> groups = new ArrayList<>();
-    private final @Nullable DeviceHolder.TerminalCaller tc;
+    private final @Nullable
+    DeviceHolder.Functions tc;
     private final FragmentManager fm;
 
-    public GroupAdapter(FragmentManager fm, @Nullable DeviceHolder.TerminalCaller tc, @Nullable Runnable update) {
-        this.update = update;
+    public GroupAdapter(FragmentManager fm, @Nullable DeviceHolder.Functions tc) {
         this.tc = tc;
         this.fm = fm;
     }
-
-    private final @Nullable
-    Runnable update;
 
     public Set<Pair<String, MQTT.MessageCallback>> callbacks = new HashSet<>();
 
@@ -90,12 +87,12 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder>{
 
                     @Override
                     public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                        values.put(Pair.create(d.getName(), o), "Fail");
+                        values.put(Pair.create(d.getIdentificator(), o), "Fail");
                     }
                 });
                 MQTT.MessageCallback mc = (topic, msg) -> {
-                    values.put(Pair.create(d.getName(), o), msg.toString());
-                    updateValues(d.getName(), o);
+                    values.put(Pair.create(d.getIdentificator(), o), msg.toString());
+                    updateValues(d.getIdentificator(), o);
                 };
                 Lab240.getMqtt().addListener(path, mc);
                 callbacks.add(Pair.create(path, mc));
@@ -110,12 +107,12 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder>{
 
                     @Override
                     public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                        values.put(Pair.create(d.getName(), o), "0");
+                        values.put(Pair.create(d.getIdentificator(), o), "0");
                     }
                 });
                 MQTT.MessageCallback mc = (topic, msg) -> {
-                    values.put(Pair.create(d.getName(), o), msg.toString());
-                    updateValues(d.getName(), o);
+                    values.put(Pair.create(d.getIdentificator(), o), msg.toString());
+                    updateValues(d.getIdentificator(), o);
                 };
                 Lab240.getMqtt().addListener(path, mc);
                 callbacks.add(Pair.create(path, mc));

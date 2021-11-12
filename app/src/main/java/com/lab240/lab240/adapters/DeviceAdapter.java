@@ -2,7 +2,6 @@ package com.lab240.lab240.adapters;
 
 import android.util.Pair;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -20,29 +19,27 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class DeviceAdapter extends RecyclerView.Adapter<DeviceHolder>{
 
-    public DeviceAdapter(FragmentManager fm, List<String> groups, Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters, Map<Pair<String, Out>, String> values, @Nullable DeviceHolder.TerminalCaller tc, @Nullable Runnable update) {
-        this.update = update;
+    public DeviceAdapter(FragmentManager fm, Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters, Map<Pair<String, Out>, String> values, @Nullable DeviceHolder.Functions tc) {
         this.values = values;
         this.updaters = updaters;
         this.tc = tc;
-        this.groups = groups;
         this.fm = fm;
     }
 
     private final Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters;
     private final Map<Pair<String, Out>, String> values;
-    private final @Nullable DeviceHolder.TerminalCaller tc;
-    private final List<String> groups;
     private final FragmentManager fm;
+    private final @Nullable DeviceHolder.Functions tc;
 
     @NonNull
     @Override
     public DeviceHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new DeviceHolder(fm,LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_device, parent, false), groups, updaters, values, tc, update);
+        return new DeviceHolder(fm,LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_device, parent, false), updaters, values, tc);
     }
 
     @Override
@@ -50,8 +47,8 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceHolder>{
         Device d = devices.get(position);
         holder.item = d;
         holder.name.setText(d.getName());
-        holder.type.setText(d.getType().name);
-        holder.adapter.setData(d.getName(), Arrays.asList(d.getType().relays), d.getOuts());
+        holder.type.setText(String.format(Locale.getDefault(), "%s %s", d.getType().name, d.getIdentificator()));
+        holder.adapter.setData(d.getIdentificator(), Arrays.asList(d.getType().relays), d.getOuts());
     }
 
     @Override
@@ -60,15 +57,14 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceHolder>{
     }
 
     public final List<Device> devices = new ArrayList<>();
-    private final @Nullable Runnable update;
 
     public void setData(Collection<Device> data){
         devices.clear();
         devices.addAll(data);
         Collections.sort(devices, (d1, d2)->{
-            if(d1.getName().equals(d2.getName()))
+            if(d1.getIdentificator().equals(d2.getIdentificator()))
                 return Long.compare(d1.getId(), d2.getId());
-            return d1.getName().compareTo(d2.getName());
+            return d1.getIdentificator().compareTo(d2.getIdentificator());
         });
         notifyDataSetChanged();
     }
