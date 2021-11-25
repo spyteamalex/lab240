@@ -2,6 +2,7 @@ package com.lab240.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import com.google.common.base.Optional;
 import com.google.gson.Gson;
@@ -55,6 +56,7 @@ public class Lab240 {
     }
 
     public static void saveConfig(Context c, Config conf){
+        Log.i("call", "Save config in Lab240");
         SharedPreferences sp = c.getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
         SharedPreferences.Editor edit = sp.edit();
         edit.putString(NAME, conf.name);
@@ -78,6 +80,7 @@ public class Lab240 {
     }
 
     public static void saveDevices(Context c, List<Device> devices){
+        Log.i("call", "Save devices in Lab240");
         SharedPreferences sp = c.getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
         SharedPreferences.Editor edit = sp.edit();
         edit.putString(DEVICES, serializeDevices(devices));
@@ -85,6 +88,7 @@ public class Lab240 {
     }
 
     public static void exit(Context c){
+        Log.i("call", "Exit in Lab240");
         SharedPreferences sp = c.getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
         SharedPreferences.Editor edit = sp.edit();
         edit.clear();

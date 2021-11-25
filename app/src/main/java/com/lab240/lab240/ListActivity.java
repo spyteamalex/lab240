@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.util.Pair;
 import android.view.Gravity;
 import android.view.Menu;
@@ -15,6 +16,7 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 
@@ -23,6 +25,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
@@ -36,7 +39,6 @@ import com.lab240.lab240.adapters.DeviceHolder;
 import com.lab240.utils.GravityArrayAdapter;
 import com.lab240.lab240.adapters.GroupAdapter;
 import com.lab240.utils.AlertSheetDialog;
-import com.lab240.utils.Container;
 import com.lab240.utils.Lab240;
 import com.lab240.utils.MQTT;
 
@@ -48,20 +50,25 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class ListActivity extends AppCompatActivity {
 
     GroupAdapter ga;
-
+    ImageView status;
     public static final int KEY = 2;
 
     ActivityResultLauncher<Intent> consoleLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
+                Log.i("info", "Result from terminal = "+result.getData().getDataString());
                 if (result.getResultCode() == Activity.RESULT_OK) {
                     Intent data = result.getData();
-                    if(data == null || !data.hasExtra(TerminalActivity.RESULT) || !data.hasExtra(TerminalActivity.ID))
+                    if(data == null || !data.hasExtra(TerminalActivity.RESULT) || !data.hasExtra(TerminalActivity.ID)) {
+                        Log.i("info", String.format("No data: (data == null: %b, no RESULT: %b, no ID: %b)", data == null,!data.hasExtra(TerminalActivity.RESULT), !data.hasExtra(TerminalActivity.ID)));
                         return;
+                    }
                     long id = data.getLongExtra(TerminalActivity.ID, 0);
                     Gson gson = new GsonBuilder().create();
                     List<OutLine> res = gson.fromJson(data.getStringExtra(TerminalActivity.RESULT), new TypeToken<List<OutLine>>(){}.getType());
@@ -80,15 +87,35 @@ public class ListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list);
-        if(!Lab240.isInited())
+        Log.i("call", "Create ListActivity");
+        if(!Lab240.isInited()) {
             finish();
+            Log.i("info", "Lab240 is not inited on creating ListActivity");
+            return;
+        }
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        status = findViewById(R.id.status);
 
         RecyclerView groups = findViewById(R.id.groups);
         ga = new GroupAdapter(getSupportFragmentManager(), new DeviceHolder.Functions() {
             @Override
             public void call(Device device) {
-                if (!ListActivity.this.hasWindowFocus())
+                Log.i("action", "Call terminal");
+                if (!ListActivity.this.hasWindowFocus()) {
+                    Log.i("info", "No focus on calling terminal");
                     return;
+                }
+                if(Lab240.getMqtt() == null || !Lab240.getMqtt().isConnected()){
+                    Log.i("info", "No connection on calling terminal");
+                    AlertSheetDialog asd = new AlertSheetDialog(ListActivity.this);
+                    asd.addText(getResources().getString(R.string.no_connection));
+                    asd.setCancelButtonText(getResources().getString(R.string.ok), AlertSheetDialog.ButtonType.DEFAULT);
+                    asd.show(getSupportFragmentManager(), "");
+                    return;
+                }
                 Intent i = new Intent(ListActivity.this, TerminalActivity.class);
                 i.putExtra(TerminalActivity.TYPE, device.getType().ordinal());
                 i.putExtra(TerminalActivity.DEVICE, device.getIdentificator());
@@ -99,12 +126,14 @@ public class ListActivity extends AppCompatActivity {
 
             @Override
             public void edit(Device d) {
+                Log.i("action", "Edit device");
                 editDevice(d);
                 update();
             }
 
             @Override
             public void delete(Device d) {
+                Log.i("action", "Delete device");
                 Lab240.getDevices().remove(d);
                 Lab240.saveDevices(ListActivity.this, Lab240.getDevices());
                 update();
@@ -112,6 +141,7 @@ public class ListActivity extends AppCompatActivity {
 
             @Override
             public void setGroup(Collection<Device> ds, String str) {
+                Log.i("action", "Edit group");
                 for(Device d: ds)
                     d.setGroup(str);
                 Lab240.saveDevices(ListActivity.this, Lab240.getDevices());
@@ -120,17 +150,19 @@ public class ListActivity extends AppCompatActivity {
 
             @Override
             public void delete(Collection<Device> d) {
+                Log.i("action", "Delete group");
                 Lab240.getDevices().removeAll(d);
                 Lab240.saveDevices(ListActivity.this, Lab240.getDevices());
                 update();
             }
         });
         groups.setAdapter(ga);
-        ga.setData(Lab240.getDevices());
-        lcc = cause -> handleNoConnection();
+        update();
+        lcc = cause -> handleNoConnection(true);
     }
 
     public void update(){
+        Log.i("call", "Update ListActivity");
         ga.setData(Lab240.getDevices());
     }
 
@@ -143,8 +175,10 @@ public class ListActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if(item.getItemId() == R.id.add) {
+            Log.i("action", "Add device");
             editDevice();
         }else if(item.getItemId() == R.id.exit){
+            Log.i("action", "Exit");
             exit();
         }
         return super.onOptionsItemSelected(item);
@@ -155,6 +189,7 @@ public class ListActivity extends AppCompatActivity {
     }
 
     public void editDevice(@Nullable Device device){
+        Log.i("action", "Editing device (New = "+(device == null)+")");
         final boolean editing = device != null;
         AlertSheetDialog asd2 = new AlertSheetDialog(this);
         asd2.show(getSupportFragmentManager(), "");
@@ -193,8 +228,14 @@ public class ListActivity extends AppCompatActivity {
         GravityArrayAdapter<String> typeAdapter = new GravityArrayAdapter<>(this, android.R.layout.simple_spinner_item, devicesString);
         typeAdapter.setGravity(Gravity.CENTER);
         typeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        List<Out> outs = new ArrayList<>();
 
+        List<Out> relays = new ArrayList<>();
+        LinearLayout relaysLayout = asd2.addView(new LinearLayout(this));
+        relaysLayout.setOrientation(LinearLayout.VERTICAL);
+        relaysLayout.setGravity(Gravity.CENTER);
+        relaysLayout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        List<Out> outs = new ArrayList<>();
         LinearLayout outsLayout = asd2.addView(new LinearLayout(this));
         outsLayout.setOrientation(LinearLayout.VERTICAL);
         outsLayout.setGravity(Gravity.CENTER);
@@ -207,7 +248,9 @@ public class ListActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 outsLayout.removeAllViews();
+                relaysLayout.removeAllViews();
                 outs.clear();
+                relays.clear();
                 Devices devices = Devices.values()[type.getSelectedItemPosition()];
                 for(Out o : devices.outs){
                     CheckBox cb = new CheckBox(view.getContext());
@@ -221,6 +264,19 @@ public class ListActivity extends AppCompatActivity {
                     cb.setChecked(!editing || device.getOuts().contains(o));
                     cb.setText(o.getName());
                     outsLayout.addView(cb);
+                }
+                for(Out o : devices.relays){
+                    CheckBox cb = new CheckBox(view.getContext());
+                    cb.setOnCheckedChangeListener((compoundButton, b) -> {
+                        if(b)
+                            relays.add(o);
+                        else{
+                            relays.remove(o);
+                        }
+                    });
+                    cb.setChecked(!editing || device.getRelays().contains(o));
+                    cb.setText(o.getName());
+                    relaysLayout.addView(cb);
                 }
             }
 
@@ -242,8 +298,9 @@ public class ListActivity extends AppCompatActivity {
                                 group.getText().toString(),
                         id, Devices.values()[type.getSelectedItemPosition()]);
                 d.getOuts().addAll(outs);
+                d.getRelays().addAll(relays);
                 Lab240.getDevices().add(d);
-                ga.setData(Lab240.getDevices());
+                update();
                 Lab240.saveDevices(this, Lab240.getDevices());
             }, AlertSheetDialog.ButtonType.DEFAULT);
         }else{
@@ -251,13 +308,16 @@ public class ListActivity extends AppCompatActivity {
                 device.getOuts().clear();
                 device.getOuts().addAll(outs);
 
+                device.getRelays().clear();
+                device.getRelays().addAll(relays);
+
                 device.setName(name.getText().toString());
                 device.setIdentificator(iden.getText().toString());
                 device.setGroup(groupSpinner.getSelectedItemPosition() != groupSpinner.getCount()-1 ?
                         groups2.get(groupSpinner.getSelectedItemPosition()) :
                         group.getText().toString());
 
-                ga.setData(Lab240.getDevices());
+                update();
                 Lab240.saveDevices(this, Lab240.getDevices());
             }, AlertSheetDialog.ButtonType.DEFAULT);
         }
@@ -298,29 +358,57 @@ public class ListActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        for(String topic : Lab240.getMqtt().getSubscriptions())
-            Lab240.getMqtt().unsubscribe(topic, KEY);
-        for(Pair<String, MQTT.MessageCallback> p : ga.callbacks)
-            Lab240.getMqtt().removeListener(p.first, p.second);
+        Log.i("call", "Destroy ListActivity");
+        if(Lab240.getMqtt() != null) {
+            for (String topic : Lab240.getMqtt().getSubscriptions())
+                Lab240.getMqtt().unsubscribe(topic, KEY);
+            for (Pair<String, MQTT.MessageCallback> p : ga.callbacks)
+                Lab240.getMqtt().removeListener(p.first, p.second);
+        }
     }
 
-    public void handleNoConnection(){
-        AlertSheetDialog asd = new AlertSheetDialog(this);
-        asd.setCancelable(false);
-        asd.setCloseOnAction(false);
-        asd.addText(getResources().getString(R.string.no_connection));
-        asd.addButton(getResources().getString(R.string.connect), btn-> Lab240.getMqtt().connect(this, new IMqttActionListener() {
+    Timer reconnectTimer = null;
+    Timer updateTimer = null;
+
+    public final static int UPDATE_PERIOD = 1000*60*5;
+    public final static int RECONNECTION_PERIOD = 5000;
+
+    public void handleNoConnection(boolean showMsg){
+        Log.i("call", "Handling no connection in ListActivity");
+        status.setImageResource(R.drawable.relay_off_image);
+        update();
+        if(showMsg) {
+            Log.i("info", "Showing alert on no connection in ListActivity");
+            AlertSheetDialog asd = new AlertSheetDialog(this);
+            asd.addText(getResources().getString(R.string.connection_lost));
+            asd.setCancelButtonText(getResources().getString(R.string.ok), AlertSheetDialog.ButtonType.DEFAULT);
+            asd.show(getSupportFragmentManager(), "");
+        }
+        reconnectTimer = new Timer();
+        reconnectTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
+            public void run() {
+                Log.i("action", "Reconnect");
+                reconnect();
+            }
+        }, 0, RECONNECTION_PERIOD);
+    }
+
+    public void reconnect(){
+        Log.i("call", "Reconnect");
+        Lab240.getMqtt().connect(this, new IMqttActionListener() {
             public void onSuccess(IMqttToken asyncActionToken) {
-                ga.setData(Lab240.getDevices());
-                asd.dismiss();
+                Log.i("info", "Successful connection in reconnect() in ListActivity");
+                update();
+                status.setImageResource(R.drawable.relay_on_image);
+                if(reconnectTimer != null) reconnectTimer.cancel();
             }
 
             @Override
-            public void onFailure(IMqttToken asyncActionToken, Throwable exception) {}
-        }), AlertSheetDialog.ButtonType.DEFAULT);
-        asd.addButton(getResources().getString(R.string.exit), btn->exit(), AlertSheetDialog.ButtonType.DESTROY);
-        asd.show(getSupportFragmentManager(), "");
+            public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                Log.i("info", "Failed connection in reconnect() in ListActivity");
+            }
+        });
     }
 
     private MQTT.LostConnectionCallback lcc = null;
@@ -328,18 +416,33 @@ public class ListActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if(lcc != null)
+        Log.i("call", "Pause ListActivity");
+        if(updateTimer != null)
+            updateTimer.cancel();
+        if(lcc != null && Lab240.getMqtt() != null)
             Lab240.getMqtt().removeOnConnectionLostCallback(lcc);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if(lcc != null)
+        Log.i("call", "Resume ListActivity");
+        updateTimer = new Timer();
+        updateTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                Log.i("action", "Auto update");
+                runOnUiThread(ListActivity.this::update);
+            }
+        }, UPDATE_PERIOD, UPDATE_PERIOD);
+        if(lcc != null && Lab240.getMqtt() != null)
             Lab240.getMqtt().addOnConnectionLostCallback(lcc);
+        if(Lab240.getMqtt() == null || !Lab240.getMqtt().isConnected())
+            handleNoConnection(false);
     }
 
     private void exit(){
+        Log.i("call", "Exit");
         Lab240.exit(this);
         finish();
     }

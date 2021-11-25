@@ -3,6 +3,7 @@ package com.lab240.lab240;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -19,6 +20,7 @@ import com.lab240.utils.MQTT;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttException;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +34,7 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
+        Log.i("call", "Create LoginActivity");
         name = findViewById(R.id.name);
         pass = findViewById(R.id.pass);
         loginLayout = findViewById(R.id.loginLayout);
@@ -45,6 +47,7 @@ public class LoginActivity extends AppCompatActivity {
         Optional<Lab240.Config> config = Lab240.getConfig(this);
         Lab240.Config conf;
         if((conf = config.orNull()) != null){
+            Log.i("info", "Autocheck in LoginActivity");
             check(conf.name, conf.pass, conf.devices, true);
         }else{
             loginLayout.setVisibility(View.VISIBLE);
@@ -54,10 +57,12 @@ public class LoginActivity extends AppCompatActivity {
 
 
     protected void next(View v){
+        Log.i("call", "Next in LoginActivity");
         check(name.getText().toString(), pass.getText().toString(), Collections.emptyList(), true);
     }
 
     protected void check(String name, String pass, List<Device> devices, boolean openFailDialog){
+        Log.i("call", "Check in LoginActivity");
         loginLayout.setVisibility(View.GONE);
         progressBar.setVisibility(View.VISIBLE);
 
@@ -65,6 +70,7 @@ public class LoginActivity extends AppCompatActivity {
         mqtt.connect(this, new IMqttActionListener() {
             @Override
             public void onSuccess(IMqttToken asyncActionToken) {
+                Log.i("info", "Successful connection in LoginActivity");
                 Lab240.setMqtt(mqtt);
                 Lab240.getDevices().clear();
                 Lab240.getDevices().addAll(devices);
@@ -77,13 +83,17 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                Log.i("info", "Failed connection in LoginActivity");
                 loginLayout.setVisibility(View.VISIBLE);
                 progressBar.setVisibility(View.GONE);
                 if(openFailDialog) {
+                    Log.i("info", "Showing dialog in check() in LoginActivity");
                     AlertSheetDialog asd = new AlertSheetDialog(LoginActivity.this);
                     asd.setCloseOnAction(false);
                     asd.addText(getResources().getString(R.string.login_fail));
-                    asd.addButton(getResources().getString(R.string.try_again), btn -> check(name, pass, devices, false), AlertSheetDialog.ButtonType.DEFAULT);
+                    asd.addButton(getResources().getString(R.string.try_again), btn -> {
+                        check(name, pass, devices, false);
+                    }, AlertSheetDialog.ButtonType.DEFAULT);
                     asd.setCancelButtonText(getResources().getString(R.string.cancel), AlertSheetDialog.ButtonType.DESTROY);
                     asd.show(getSupportFragmentManager(), "");
                 }

@@ -2,6 +2,7 @@ package com.lab240.lab240.adapters;
 
 import android.content.Context;
 import android.os.Vibrator;
+import android.util.Log;
 import android.util.Pair;
 import android.view.View;
 import android.widget.TextView;
@@ -35,7 +36,7 @@ public class DeviceHolder extends RecyclerView.ViewHolder{
     final ItemAdapter adapter;
     final RecyclerView items;
 
-    public DeviceHolder(FragmentManager fm, @NonNull View itemView, Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters, Map<Pair<String, Out>, String> values, @Nullable Functions tc) {
+    public DeviceHolder(FragmentManager fm, @NonNull View itemView, Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters, Map<Pair<String, Out>, Pair<String, Long>> values, @Nullable Functions tc) {
         super(itemView);
         name = itemView.findViewById(R.id.name);
         type = itemView.findViewById(R.id.type);
@@ -44,8 +45,11 @@ public class DeviceHolder extends RecyclerView.ViewHolder{
         items.setAdapter(adapter);
 
         itemView.setOnClickListener(view -> {
-            if(!itemView.hasWindowFocus() || !itemView.isClickable())
+            Log.i("action", "Call terminal in DeviceHolder");
+            if(!itemView.hasWindowFocus() || !itemView.isClickable()) {
+                Log.i("info", "Cancel calling terminal in DeviceHolder");
                 return;
+            }
             itemView.setClickable(false);
             if(tc != null){
                 tc.call(item);
@@ -57,14 +61,23 @@ public class DeviceHolder extends RecyclerView.ViewHolder{
         items.setOnLongClickListener(v -> itemView.performLongClick());
 
         itemView.setOnLongClickListener(view -> {
-            if(!itemView.isClickable() || !itemView.hasWindowFocus())
+            Log.i("action", "Call context menu in DeviceHolder");
+            if(!itemView.isClickable() || !itemView.hasWindowFocus()) {
+                Log.i("info", "Cancel calling context menu in DeviceHolder");
                 return false;
+            }
             itemView.setClickable(false);
             Vibrator v = (Vibrator) view.getContext().getSystemService(Context.VIBRATOR_SERVICE);
             v.vibrate(25);
             AlertSheetDialog asd = new AlertSheetDialog(itemView.getContext());
-            asd.addButton(itemView.getResources().getString(R.string.edit), btn-> tc.edit(item), AlertSheetDialog.ButtonType.DEFAULT);
-            asd.addButton(itemView.getResources().getString(R.string.delete), btn-> tc.delete(item), AlertSheetDialog.ButtonType.DESTROY);
+            asd.addButton(itemView.getResources().getString(R.string.edit), btn-> {
+                Log.i("action", "Change device in DeviceHolder");
+                tc.edit(item);
+            }, AlertSheetDialog.ButtonType.DEFAULT);
+            asd.addButton(itemView.getResources().getString(R.string.delete), btn-> {
+                Log.i("action", "Delete device in DeviceHolder");
+                tc.delete(item);
+            }, AlertSheetDialog.ButtonType.DESTROY);
             asd.setDismissAction(()->itemView.setClickable(true));
             asd.show(fm, "");
             return false;

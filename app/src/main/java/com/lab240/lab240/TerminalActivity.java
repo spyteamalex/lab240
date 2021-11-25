@@ -5,11 +5,9 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -22,9 +20,6 @@ import com.lab240.utils.AlertSheetDialog;
 import com.lab240.utils.CommandManager;
 import com.lab240.utils.Lab240;
 import com.lab240.utils.MQTT;
-
-import org.eclipse.paho.client.mqttv3.IMqttActionListener;
-import org.eclipse.paho.client.mqttv3.IMqttToken;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -177,24 +172,9 @@ public class TerminalActivity extends AppCompatActivity {
 
     public void handleNoConnection(){
         AlertSheetDialog asd = new AlertSheetDialog(this);
-        asd.setCancelable(false);
-        asd.setCloseOnAction(false);
-        asd.addText(getResources().getString(R.string.no_connection));
-        asd.addButton(getResources().getString(R.string.connect), v-> Lab240.getMqtt().connect(this, new IMqttActionListener() {
-            @Override
-            public void onSuccess(IMqttToken asyncActionToken) {
-                prepareTopics();
-                asd.dismiss();
-            }
-
-            @Override
-            public void onFailure(IMqttToken asyncActionToken, Throwable exception) {}
-        }), AlertSheetDialog.ButtonType.DEFAULT);
-        asd.addButton(getResources().getString(R.string.exit), v->{
-            v.setEnabled(false);
-            Lab240.exit(this);
-            System.exit(0);
-        }, AlertSheetDialog.ButtonType.DESTROY);
+        asd.addText(getResources().getString(R.string.connection_lost));
+        asd.setCancelButtonText(getResources().getString(R.string.ok), AlertSheetDialog.ButtonType.DEFAULT);
+        asd.setCancelAction(v->finish());
         asd.show(getSupportFragmentManager(), "");
     }
 

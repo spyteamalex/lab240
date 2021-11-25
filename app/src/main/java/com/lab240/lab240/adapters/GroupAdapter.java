@@ -1,7 +1,9 @@
 package com.lab240.lab240.adapters;
 
+import android.app.Activity;
 import android.util.Pair;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -30,24 +32,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class GroupAdapter extends RecyclerView.Adapter<GroupHolder>{
+public class GroupAdapter extends RecyclerView.Adapter<GroupHolder> {
 
-    interface Updater{
+    interface Updater {
         void update(String s);
     }
 
     @NonNull
     @Override
     public GroupHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new GroupHolder(fm, LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_group, parent, false), updaters, values, tc);
+        return new GroupHolder(fm, opened, LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_group, parent, false), updaters, values, tc);
     }
 
     @Override
     public void onBindViewHolder(@NonNull GroupHolder holder, int position) {
         String g = groups.get(position);
         holder.group = g;
-        holder.name.setText(g);
         holder.adapter.setData(devices.get(g));
+        holder.setVisible(opened.contains(g), false);
     }
 
     @Override
@@ -57,11 +59,13 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder>{
 
     private final Multimap<String, Device> devices = ArrayListMultimap.create();
     private final Multimap<Pair<String, Out>, Updater> updaters = ArrayListMultimap.create();
-    private final Map<Pair<String, Out>, String> values = new HashMap<>();
+    private final Map<Pair<String, Out>, Pair<String, Long>> values = new HashMap<>();
     private final List<String> groups = new ArrayList<>();
     private final @Nullable
     DeviceHolder.Functions tc;
     private final FragmentManager fm;
+
+    private Set<String> opened = new HashSet<>();
 
     public GroupAdapter(FragmentManager fm, @Nullable DeviceHolder.Functions tc) {
         this.tc = tc;
@@ -70,52 +74,72 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder>{
 
     public Set<Pair<String, MQTT.MessageCallback>> callbacks = new HashSet<>();
 
-    public synchronized void setData(Collection<Device> data){
-        for(Pair<String, MQTT.MessageCallback> p : callbacks)
+    public static final String RELAY_DEFAULT = "0", OUT_DEFAULT = "—";
+    public static final long MAX_NO_MSG_TIME = 1000 * 60 * 5;
+
+    public synchronized void setData(Collection<Device> data) {
+        for (Pair<String, MQTT.MessageCallback> p : callbacks)
             Lab240.getMqtt().removeListener(p.first, p.second);
         callbacks.clear();
         groups.clear();
         devices.clear();
-        for (Device d: data) {
-            devices.put(d.getGroup(), d);
-            for(Out o : d.getOuts()){
-                String path = Lab240.getOutPath(d, o);
-                Lab240.getMqtt().subscribe(Lab240.getOutPath(d, o), 0, ListActivity.KEY, new IMqttActionListener() {
-                    @Override
-                    public void onSuccess(IMqttToken asyncActionToken) {
-                    }
-
-                    @Override
-                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                        values.put(Pair.create(d.getIdentificator(), o), "Fail");
-                    }
-                });
-                MQTT.MessageCallback mc = (topic, msg) -> {
-                    values.put(Pair.create(d.getIdentificator(), o), msg.toString());
-                    updateValues(d.getIdentificator(), o);
-                };
-                Lab240.getMqtt().addListener(path, mc);
-                callbacks.add(Pair.create(path, mc));
-
+        for (Device d : data) {
+            for (Out o : d.getOuts()) {
+                Pair<String, Out> p = Pair.create(d.getIdentificator(), o);
+                if(values.containsKey(p) &&
+                        !((System.currentTimeMillis() - values.get(p).second) < MAX_NO_MSG_TIME
+                                && Lab240.getMqtt() != null
+                                && Lab240.getMqtt().isConnected()))
+                    values.remove(p);
             }
-            for(Out o : d.getType().relays){
-                String path = Lab240.getOutPath(d, o);
-                Lab240.getMqtt().subscribe(Lab240.getOutPath(d, o), 0, ListActivity.KEY, new IMqttActionListener() {
-                    @Override
-                    public void onSuccess(IMqttToken asyncActionToken) {
-                    }
+            for (Out o : d.getRelays()) {
+                Pair<String, Out> p = Pair.create(d.getIdentificator(), o);
+                if(values.containsKey(p) &&
+                        !((System.currentTimeMillis() - values.get(p).second) < MAX_NO_MSG_TIME
+                                && Lab240.getMqtt() != null
+                                && Lab240.getMqtt().isConnected()))
+                    values.remove(p);
+            }
+            devices.put(d.getGroup(), d);
+            if (Lab240.getMqtt() == null || Lab240.getMqtt().isConnected()) {
+                for (Out o : d.getOuts()) {
+                    String path = Lab240.getOutPath(d, o);
+                    Lab240.getMqtt().subscribe(Lab240.getOutPath(d, o), 0, ListActivity.KEY, new IMqttActionListener() {
+                        @Override
+                        public void onSuccess(IMqttToken asyncActionToken) {
+                        }
 
-                    @Override
-                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                        values.put(Pair.create(d.getIdentificator(), o), "0");
-                    }
-                });
-                MQTT.MessageCallback mc = (topic, msg) -> {
-                    values.put(Pair.create(d.getIdentificator(), o), msg.toString());
-                    updateValues(d.getIdentificator(), o);
-                };
-                Lab240.getMqtt().addListener(path, mc);
-                callbacks.add(Pair.create(path, mc));
+                        @Override
+                        public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+
+                        }
+                    });
+                    MQTT.MessageCallback mc = (topic, msg) -> {
+                        values.put(Pair.create(d.getIdentificator(), o), Pair.create(msg.toString(), System.currentTimeMillis()));
+                        updateValues(d.getIdentificator(), o, OUT_DEFAULT);
+                    };
+                    Lab240.getMqtt().addListener(path, mc);
+                    callbacks.add(Pair.create(path, mc));
+                }
+                for (Out o : d.getRelays()) {
+                    String path = Lab240.getOutPath(d, o);
+                    Lab240.getMqtt().subscribe(Lab240.getOutPath(d, o), 0, ListActivity.KEY, new IMqttActionListener() {
+                        @Override
+                        public void onSuccess(IMqttToken asyncActionToken) {
+                        }
+
+                        @Override
+                        public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+
+                        }
+                    });
+                    MQTT.MessageCallback mc = (topic, msg) -> {
+                        values.put(Pair.create(d.getIdentificator(), o), Pair.create(msg.toString(), System.currentTimeMillis()));
+                        updateValues(d.getIdentificator(), o, RELAY_DEFAULT);
+                    };
+                    Lab240.getMqtt().addListener(path, mc);
+                    callbacks.add(Pair.create(path, mc));
+                }
             }
         }
         groups.addAll(devices.keySet());
@@ -123,10 +147,10 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder>{
         notifyDataSetChanged();
     }
 
-    public synchronized void updateValues(String device, Out out) {
+    public synchronized void updateValues(String device, Out out, String def) {
         Pair<String, Out> p = Pair.create(device, out);
-        String str = values.containsKey(p) ? values.get(p) : "—";
-        for (Updater i: updaters.get(p)) {
+        String str = values.containsKey(p) ? values.get(p).first : def;
+        for (Updater i : updaters.get(p)) {
             i.update(str);
         }
     }

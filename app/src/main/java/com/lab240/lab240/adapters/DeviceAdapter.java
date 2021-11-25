@@ -24,7 +24,7 @@ import java.util.Map;
 
 public class DeviceAdapter extends RecyclerView.Adapter<DeviceHolder>{
 
-    public DeviceAdapter(FragmentManager fm, Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters, Map<Pair<String, Out>, String> values, @Nullable DeviceHolder.Functions tc) {
+    public DeviceAdapter(FragmentManager fm, Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters, Map<Pair<String, Out>, Pair<String, Long>> values, @Nullable DeviceHolder.Functions tc) {
         this.values = values;
         this.updaters = updaters;
         this.tc = tc;
@@ -32,7 +32,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceHolder>{
     }
 
     private final Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters;
-    private final Map<Pair<String, Out>, String> values;
+    private final Map<Pair<String, Out>, Pair<String, Long>> values;
     private final FragmentManager fm;
     private final @Nullable DeviceHolder.Functions tc;
 
@@ -48,7 +48,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceHolder>{
         holder.item = d;
         holder.name.setText(d.getName());
         holder.type.setText(String.format(Locale.getDefault(), "%s %s", d.getType().name, d.getIdentificator()));
-        holder.adapter.setData(d.getIdentificator(), Arrays.asList(d.getType().relays), d.getOuts());
+        holder.adapter.setData(d.getIdentificator(), d.getRelays(), d.getOuts());
     }
 
     @Override

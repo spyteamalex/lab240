@@ -1,7 +1,9 @@
 <resources>
     <string name="app_name">lab240</string>
     <string name="server">tcp://mqtt.lab240.ru:1883</string>
-    <string name="no_connection">Соединение потеряно</string>
+    <string name="connection_lost">Соединение потеряно</string>
+    <string name="no_connection">Нет соединения</string>
+    <string name="connection_recovered">Соединение восстановлено</string>
     <string name="login_fail">Не удалось установить соединение</string>
     <string name="name">Название</string>
     <string name="id">Идентификатор</string>
@@ -17,14 +19,10 @@
     <string name="try_again">Попробовать еще раз</string>
     <string name="send">Отправить</string>
     <string name="rename">Переименовать</string>
-    <string name="change_id">Изменить идентификатор</string>
     <string name="delete">Удалить</string>
-    <string name="change">Изменить</string>
-    <string name="change_channels">Изменить каналы</string>
-    <string name="move">Переместить</string>
-    <string name="fail">Fail</string>
     <string name="login">Логин</string>
     <string name="pass">Пароль</string>
     <string name="next">Войти</string>
     <string name="command">Команда</string>
+    <string name="ok">Ок</string>
 </resources>

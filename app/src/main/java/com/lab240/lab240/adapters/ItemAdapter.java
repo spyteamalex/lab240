@@ -1,5 +1,6 @@
 package com.lab240.lab240.adapters;
 
+import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
@@ -20,10 +21,10 @@ import java.util.Map;
 
 public class ItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
 
-    final Map<Pair<String, Out>, String> values;
+    final Map<Pair<String, Out>, Pair<String, Long>> values;
     final Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters;
 
-    public ItemAdapter(Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters, Map<Pair<String, Out>, String> values) {
+    public ItemAdapter(Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters, Map<Pair<String, Out>, Pair<String, Long>> values) {
         this.values = values;
         this.updaters = updaters;
     }
@@ -37,14 +38,26 @@ public class ItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
         switch (viewType) {
             case ITEM:
                 ItemHolder itemHolder = new ItemHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_item, parent, false));
-                itemHolder.itemView.setOnClickListener(v -> parent.callOnClick());
-                itemHolder.itemView.setOnLongClickListener(v -> parent.performLongClick());
+                itemHolder.itemView.setOnClickListener(v -> {
+                    Log.i("action", "Click in ItemAdapter");
+                    parent.callOnClick();
+                });
+                itemHolder.itemView.setOnLongClickListener(v -> {
+                    Log.i("action", "Long click in ItemAdapter");
+                    return parent.performLongClick();
+                });
                 viewHolder = itemHolder;
                 break;
             case RELAY:
                 RelayHolder relayHolder = new RelayHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_relay, parent, false));
-                relayHolder.itemView.setOnClickListener(v -> parent.callOnClick());
-                relayHolder.itemView.setOnLongClickListener(v -> parent.performLongClick());
+                relayHolder.itemView.setOnClickListener(v -> {
+                    Log.i("action", "Click in ItemAdapter");
+                    parent.callOnClick();
+                });
+                relayHolder.itemView.setOnLongClickListener(v -> {
+                    Log.i("action", "Click in ItemAdapter");
+                    return parent.performLongClick();
+                });
                 viewHolder = relayHolder;
                 break;
             default:
@@ -67,7 +80,7 @@ public class ItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
                 Pair<String, Out> relayP = Pair.create(device, out);
                 relayHolder.p = relayP;
                 updaters.put(relayP, relayHolder.updater);
-                if (values.containsKey(relayP) && "1".equals(values.get(relayP)))
+                if (values.containsKey(relayP) && "1".equals(values.get(relayP).first))
                     relayHolder.value.setImageResource(R.drawable.relay_on_image);
                 else
                     relayHolder.value.setImageResource(R.drawable.relay_off_image);
@@ -82,9 +95,9 @@ public class ItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
                 updaters.put(itemP, itemHolder.updater);
                 itemHolder.p = itemP;
                 if (values.containsKey(itemP))
-                    itemHolder.value.setText(values.get(itemP));
+                    itemHolder.update(values.get(itemP).first);
                 else
-                    itemHolder.value.setText("—");
+                    itemHolder.update("—");
                 break;
         }
     }

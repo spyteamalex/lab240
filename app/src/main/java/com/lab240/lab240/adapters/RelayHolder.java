@@ -1,5 +1,6 @@
 package com.lab240.lab240.adapters;
 
+import android.graphics.Color;
 import android.util.Pair;
 import android.view.View;
 import android.widget.ImageView;

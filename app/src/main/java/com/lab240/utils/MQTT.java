@@ -1,6 +1,7 @@
 package com.lab240.utils;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -12,6 +13,7 @@ import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -50,11 +52,16 @@ public class MQTT {
         lostConnectionCallbacks.remove(lcc);
     }
 
-    public void connect(Context context, @Nullable IMqttActionListener listener){
+    public void disconnect() throws MqttException {
+        if(client != null) client.disconnect();
+    }
+
+    public synchronized void connect(Context context, @Nullable IMqttActionListener listener){
         String clientId = MqttClient.generateClientId();
         client = new MqttAndroidClient(context, server,
                         clientId);
         client.setCallback(new MqttCallback() {
+
             @Override
             public void connectionLost(Throwable cause) {
                 for(LostConnectionCallback clc : lostConnectionCallbacks){

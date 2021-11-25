@@ -14,6 +14,7 @@ public class Device {
     private final long id;      //Уникальный номер
     private final Devices type;
     private final Set<Out> outs = new TreeSet<>();
+    private final Set<Out> relays = new TreeSet<>();
 
     public List<OutLine> getConsoleLasts() {
         return consoleLasts;
@@ -58,6 +59,10 @@ public class Device {
 
     public Set<Out> getOuts() {
         return outs;
+    }
+    
+    public Set<Out> getRelays() {
+        return relays;
     }
 
     public Device(String name, String identificator, String group, long id, Devices type) {
