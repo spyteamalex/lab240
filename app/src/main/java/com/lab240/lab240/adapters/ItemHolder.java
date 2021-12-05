@@ -1,6 +1,5 @@
 package com.lab240.lab240.adapters;
 
-import android.graphics.Color;
 import android.util.Pair;
 import android.view.View;
 import android.widget.TextView;
@@ -13,9 +12,10 @@ import com.lab240.lab240.R;
 
 public class ItemHolder extends RecyclerView.ViewHolder{
 
+    public static final String RELAY_DEFAULT = "0";
     final TextView topic, value;
     Pair<String, Out> p;
-    GroupAdapter.Updater updater;
+    Updater updater;
 
     public ItemHolder(@NonNull View itemView) {
         super(itemView);
@@ -27,5 +27,9 @@ public class ItemHolder extends RecyclerView.ViewHolder{
 
     public void update(String v){
         value.setText(v);
+    }
+
+    public interface Updater {
+        void update(String s);
     }
 }

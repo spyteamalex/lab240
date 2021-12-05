@@ -5,7 +5,6 @@ import android.os.Vibrator;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
-import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -30,7 +29,7 @@ public class GroupHolder extends RecyclerView.ViewHolder{
     String group;
 
 
-    public GroupHolder(FragmentManager fm, Set<String> opened, @NonNull View itemView, Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters, Map<Pair<String, Out>, Pair<String, Long>> values, @Nullable DeviceHolder.Functions tc) {
+    public GroupHolder(FragmentManager fm, Set<String> opened, @NonNull View itemView, Multimap<Pair<String, Out>, ItemHolder.Updater> updaters, Map<Pair<String, Out>, Pair<String, Long>> values, @Nullable DeviceHolder.Functions tc) {
         super(itemView);
         devices = itemView.findViewById(R.id.devices);
         adapter = new DeviceAdapter(fm, updaters, values, tc);

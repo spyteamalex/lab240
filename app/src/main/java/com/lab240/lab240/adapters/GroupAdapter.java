@@ -1,9 +1,7 @@
 package com.lab240.lab240.adapters;
 
-import android.app.Activity;
 import android.util.Pair;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -34,10 +32,6 @@ import java.util.Set;
 
 public class GroupAdapter extends RecyclerView.Adapter<GroupHolder> {
 
-    interface Updater {
-        void update(String s);
-    }
-
     @NonNull
     @Override
     public GroupHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -58,14 +52,14 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder> {
     }
 
     private final Multimap<String, Device> devices = ArrayListMultimap.create();
-    private final Multimap<Pair<String, Out>, Updater> updaters = ArrayListMultimap.create();
+    private final Multimap<Pair<String, Out>, ItemHolder.Updater> updaters = ArrayListMultimap.create();
     private final Map<Pair<String, Out>, Pair<String, Long>> values = new HashMap<>();
     private final List<String> groups = new ArrayList<>();
     private final @Nullable
     DeviceHolder.Functions tc;
     private final FragmentManager fm;
 
-    private Set<String> opened = new HashSet<>();
+    private final Set<String> opened = new HashSet<>();
 
     public GroupAdapter(FragmentManager fm, @Nullable DeviceHolder.Functions tc) {
         this.tc = tc;
@@ -74,7 +68,7 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder> {
 
     public Set<Pair<String, MQTT.MessageCallback>> callbacks = new HashSet<>();
 
-    public static final String RELAY_DEFAULT = "0", OUT_DEFAULT = "—";
+    public static final String OUT_DEFAULT = "—";
     public static final long MAX_NO_MSG_TIME = 1000 * 60 * 5;
 
     public synchronized void setData(Collection<Device> data) {
@@ -104,7 +98,7 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder> {
             if (Lab240.getMqtt() == null || Lab240.getMqtt().isConnected()) {
                 for (Out o : d.getOuts()) {
                     String path = Lab240.getOutPath(d, o);
-                    Lab240.getMqtt().subscribe(Lab240.getOutPath(d, o), 0, ListActivity.KEY, new IMqttActionListener() {
+                    Lab240.getMqtt().subscribe(path, 0, ListActivity.KEY, new IMqttActionListener() {
                         @Override
                         public void onSuccess(IMqttToken asyncActionToken) {
                         }
@@ -123,7 +117,7 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder> {
                 }
                 for (Out o : d.getRelays()) {
                     String path = Lab240.getOutPath(d, o);
-                    Lab240.getMqtt().subscribe(Lab240.getOutPath(d, o), 0, ListActivity.KEY, new IMqttActionListener() {
+                    Lab240.getMqtt().subscribe(path, 0, ListActivity.KEY, new IMqttActionListener() {
                         @Override
                         public void onSuccess(IMqttToken asyncActionToken) {
                         }
@@ -135,7 +129,7 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder> {
                     });
                     MQTT.MessageCallback mc = (topic, msg) -> {
                         values.put(Pair.create(d.getIdentificator(), o), Pair.create(msg.toString(), System.currentTimeMillis()));
-                        updateValues(d.getIdentificator(), o, RELAY_DEFAULT);
+                        updateValues(d.getIdentificator(), o, ItemHolder.RELAY_DEFAULT);
                     };
                     Lab240.getMqtt().addListener(path, mc);
                     callbacks.add(Pair.create(path, mc));
@@ -150,7 +144,7 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder> {
     public synchronized void updateValues(String device, Out out, String def) {
         Pair<String, Out> p = Pair.create(device, out);
         String str = values.containsKey(p) ? values.get(p).first : def;
-        for (Updater i : updaters.get(p)) {
+        for (ItemHolder.Updater i : updaters.get(p)) {
             i.update(str);
         }
     }

@@ -117,10 +117,8 @@ public class ListActivity extends AppCompatActivity {
                     return;
                 }
                 Intent i = new Intent(ListActivity.this, TerminalActivity.class);
-                i.putExtra(TerminalActivity.TYPE, device.getType().ordinal());
-                i.putExtra(TerminalActivity.DEVICE, device.getIdentificator());
-                i.putExtra(TerminalActivity.ID, device.getId());
-                i.putExtra(TerminalActivity.OUTLINES, Lab240.serializeOutLines(device.getConsoleLasts()));
+                Gson gson = new GsonBuilder().create();
+                i.putExtra(TerminalActivity.DEVICE, gson.toJson(device));
                 consoleLauncher.launch(i);
             }
 

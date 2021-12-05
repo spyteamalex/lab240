@@ -36,7 +36,7 @@ public class DeviceHolder extends RecyclerView.ViewHolder{
     final ItemAdapter adapter;
     final RecyclerView items;
 
-    public DeviceHolder(FragmentManager fm, @NonNull View itemView, Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters, Map<Pair<String, Out>, Pair<String, Long>> values, @Nullable Functions tc) {
+    public DeviceHolder(FragmentManager fm, @NonNull View itemView, Multimap<Pair<String, Out>, ItemHolder.Updater> updaters, Map<Pair<String, Out>, Pair<String, Long>> values, @Nullable Functions tc) {
         super(itemView);
         name = itemView.findViewById(R.id.name);
         type = itemView.findViewById(R.id.type);

@@ -15,7 +15,6 @@ import com.lab240.devices.Out;
 import com.lab240.lab240.R;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -24,14 +23,14 @@ import java.util.Map;
 
 public class DeviceAdapter extends RecyclerView.Adapter<DeviceHolder>{
 
-    public DeviceAdapter(FragmentManager fm, Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters, Map<Pair<String, Out>, Pair<String, Long>> values, @Nullable DeviceHolder.Functions tc) {
+    public DeviceAdapter(FragmentManager fm, Multimap<Pair<String, Out>, ItemHolder.Updater> updaters, Map<Pair<String, Out>, Pair<String, Long>> values, @Nullable DeviceHolder.Functions tc) {
         this.values = values;
         this.updaters = updaters;
         this.tc = tc;
         this.fm = fm;
     }
 
-    private final Multimap<Pair<String, Out>, GroupAdapter.Updater> updaters;
+    private final Multimap<Pair<String, Out>, ItemHolder.Updater> updaters;
     private final Map<Pair<String, Out>, Pair<String, Long>> values;
     private final FragmentManager fm;
     private final @Nullable DeviceHolder.Functions tc;

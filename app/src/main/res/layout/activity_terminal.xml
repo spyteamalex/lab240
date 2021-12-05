@@ -6,30 +6,83 @@
     android:layout_height="match_parent"
     tools:context=".TerminalActivity">
 
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="0dp"
+        android:layout_height="?android:actionBarSize"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:title="@string/app_name" />
+
+    <LinearLayout
+        android:id="@+id/bars"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="5dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginBottom="15dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/outlines"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintVertical_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/setters"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:foregroundGravity="center"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/getters"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+            android:layout_weight="1"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/relays"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+    </LinearLayout>
+
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/outs"
+        android:id="@+id/outlines"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="15dp"
         android:layout_marginLeft="15dp"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="5dp"
         android:layout_marginEnd="15dp"
         android:layout_marginRight="15dp"
-        android:layout_marginBottom="15dp"
+        android:layout_marginBottom="5dp"
+        android:fadeScrollbars="false"
         android:foregroundGravity="bottom"
+        android:scrollbars="vertical"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintBottom_toTopOf="@+id/hints"
+        app:layout_constraintBottom_toTopOf="@+id/history"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/bars"
+        app:layout_constraintVertical_weight="1" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/hints"
+        android:id="@+id/history"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="15dp"
         android:layout_marginLeft="15dp"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="5dp"
         android:layout_marginEnd="15dp"
         android:layout_marginRight="15dp"
         android:layout_marginBottom="5dp"
@@ -38,7 +91,7 @@
         app:layout_constraintBottom_toTopOf="@+id/cmd"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/outs" />
+        app:layout_constraintTop_toBottomOf="@+id/outlines" />
 
     <EditText
         android:id="@+id/cmd"
@@ -57,7 +110,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/send"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/hints" />
+        app:layout_constraintTop_toBottomOf="@+id/history" />
 
     <Button
         android:id="@+id/send"

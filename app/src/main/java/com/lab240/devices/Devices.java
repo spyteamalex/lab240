@@ -1,13 +1,11 @@
 package com.lab240.devices;
 
-import com.lab240.utils.HintManager;
-
 public enum Devices {
     TEMP_EQUALIZER(
             "Выравниватель температуры",
-            "in/params",
-            "out/info",
-            "out/log",
+            new Out("params", "in"),
+            new Out("info", "out"),
+            new Out("log", "out"),
             new Out[]{
                     new Out("r1", "out", "relays"),
                     new Out("r2", "out", "relays")
@@ -18,12 +16,13 @@ public enum Devices {
                     new Out("temp_odd", "out", "sensors"),
                     new Out("time_up", "out")
             },
-            HintManager.DEFAULT_HINTS),
+            Hints.DEFAULT_SETTER_HINTS,
+            Hints.DEFAULT_GETTER_HINTS),
     STATION_CONTROL(
             "Контроль станции",
-            "in/params",
-            "out/info",
-            "out/log",
+            new Out("params", "in"),
+            new Out("info", "out"),
+            new Out("log", "out"),
             new Out[]{
                     new Out("r1", "out", "relays")
             },
@@ -34,12 +33,13 @@ public enum Devices {
                     new Out("strong_sec", "out", "sensors"),
                     new Out("time_up", "out")
             },
-            HintManager.DEFAULT_HINTS),
+            Hints.DEFAULT_SETTER_HINTS,
+            Hints.DEFAULT_GETTER_HINTS),
     THERMOSTAT(
             "Термостат",
-            "in/params",
-            "out/info",
-            "out/log",
+            new Out("params", "in"),
+            new Out("info", "out"),
+            new Out("log", "out"),
             new Out[]{
                     new Out("r1", "out", "relays")
             },
@@ -48,12 +48,13 @@ public enum Devices {
                     new Out("temp_out", "out", "sensors"),
                     new Out("time_up", "out")
             },
-            HintManager.DEFAULT_HINTS),
+            Hints.DEFAULT_SETTER_HINTS,
+            Hints.DEFAULT_GETTER_HINTS),
     SOCKET_WITH_TIMER(
             "Розетка с таймером",
-            "in/params",
-            "out/info",
-            "out/log",
+            new Out("params", "in"),
+            new Out("info", "out"),
+            new Out("log", "out"),
             new Out[]{
                     new Out("r1", "out", "relays"),
                     new Out("r2", "out", "relays")
@@ -62,12 +63,13 @@ public enum Devices {
                     new Out("temp_in", "out", "sensors"),
                     new Out("time_up", "out")
             },
-            HintManager.DEFAULT_HINTS),
+            Hints.DEFAULT_SETTER_HINTS,
+            Hints.DEFAULT_GETTER_HINTS),
     SOCKET_WITH_CURRENT_CONTROL(
             "Розетка с контролем тока",
-            "in/params",
-            "out/info",
-            "out/log",
+            new Out("params", "in"),
+            new Out("info", "out"),
+            new Out("log", "out"),
             new Out[]{
                     new Out("r1", "out", "relays"),
                     new Out("r2", "out", "relays")
@@ -78,12 +80,13 @@ public enum Devices {
                     new Out("strong_sec", "out", "sensors"),
                     new Out("time_up", "out")
             },
-            HintManager.DEFAULT_HINTS),
+            Hints.DEFAULT_SETTER_HINTS,
+            Hints.DEFAULT_GETTER_HINTS),
     STATION_CONTROL_AND_THERMOSTAT(
             "Контроль станции и термостат",
-            "in/params",
-            "out/info",
-            "out/log",
+            new Out("params", "in"),
+            new Out("info", "out"),
+            new Out("log", "out"),
             new Out[]{
                     new Out("r1", "out", "relays"),
                     new Out("r2", "out", "relays")
@@ -95,12 +98,13 @@ public enum Devices {
                     new Out("strong_sec", "out", "sensors"),
                     new Out("time_up", "out")
             },
-            HintManager.DEFAULT_HINTS),
+            Hints.DEFAULT_SETTER_HINTS,
+            Hints.DEFAULT_GETTER_HINTS),
     LIGHTING_AND_WATERING(
             "Подсветка и полив",
-            "in/params",
-            "out/info",
-            "out/log",
+            new Out("params", "in"),
+            new Out("info", "out"),
+            new Out("log", "out"),
             new Out[]{
                     new Out("r1", "out", "relays"),
                     new Out("r2", "out", "relays")
@@ -109,12 +113,13 @@ public enum Devices {
                     new Out("temp_in", "out", "sensors"),
                     new Out("time_up", "out")
             },
-            HintManager.DEFAULT_HINTS),
+            Hints.DEFAULT_SETTER_HINTS,
+            Hints.DEFAULT_GETTER_HINTS),
     THERMOSTAT_WITH_SOCKET(
             "Термостат с розеткой",
-            "in/params",
-            "out/info",
-            "out/log",
+            new Out("params", "in"),
+            new Out("info", "out"),
+            new Out("log", "out"),
             new Out[]{
                     new Out("r1", "out", "relays"),
                     new Out("r2", "out", "relays")
@@ -124,23 +129,25 @@ public enum Devices {
                     new Out("temp_out", "out", "sensors"),
                     new Out("time_up", "out")
             },
-            HintManager.DEFAULT_HINTS),
+            Hints.DEFAULT_SETTER_HINTS,
+            Hints.DEFAULT_GETTER_HINTS),
     CURRENT_CONTROLLER_1PHASE_SCT013(
             "Контроль тока(1 фаза) на sct013",
-            "in/params",
-            "out/info",
-            "out/log",
+            new Out("params", "in"),
+            new Out("info", "out"),
+            new Out("log", "out"),
             new Out[]{},
             new Out[]{
                     new Out("sct013_1", "out", "sensors"),
                     new Out("time_up", "out")
             },
-            HintManager.DEFAULT_HINTS),
+            Hints.DEFAULT_SETTER_HINTS,
+            Hints.DEFAULT_GETTER_HINTS),
     CURRENT_CONTROLLER_3PHASE(
             "Контроль тока(3 фазы) на sct013",
-            "in/params",
-            "out/info",
-            "out/log",
+            new Out("params", "in"),
+            new Out("info", "out"),
+            new Out("log", "out"),
             new Out[]{},
             new Out[]{
                     new Out("sct013_1", "out", "sensors"),
@@ -149,12 +156,13 @@ public enum Devices {
                     new Out("sct013x3", "out", "sensors"),
                     new Out("time_up", "out")
             },
-            HintManager.DEFAULT_HINTS),
+            Hints.DEFAULT_SETTER_HINTS,
+            Hints.DEFAULT_GETTER_HINTS),
     CURRENT_CONTROLLER_1PHASE_PZEM004(
             "Контроль тока(1 фаза) на pzem004",
-            "in/params",
-            "out/info",
-            "out/log",
+            new Out("params", "in"),
+            new Out("info", "out"),
+            new Out("log", "out"),
             new Out[]{},
             new Out[]{
                     new Out("pzem_current", "out", "sensors"),
@@ -164,19 +172,22 @@ public enum Devices {
                     new Out("pzem004", "out", "sensors"),
                     new Out("time_up", "out")
             },
-            HintManager.DEFAULT_HINTS);
+            Hints.DEFAULT_SETTER_HINTS,
+            Hints.DEFAULT_GETTER_HINTS);
 
 
-
-    public Hint[] hints;
     public Out[] outs, relays;
     public String name;
-    public String mainIn;
-    public String mainOut;
-    public String log;
-    Devices(String name, String mainIn, String mainOut, String log, Out[] relays, Out[] outs, Hint[] hints){
+    public String[] setterHints;
+    public String[] getterHints;
+    public Out mainIn;
+    public Out mainOut;
+    public Out log;
+
+    Devices(String name, Out mainIn, Out mainOut, Out log, Out[] relays, Out[] outs, String[] setterHints, String[] getterHints){
         this.name = name;
-        this.hints = hints;
+        this.setterHints = setterHints;
+        this.getterHints = getterHints;
         this.outs = outs;
         this.mainIn = mainIn;
         this.mainOut = mainOut;

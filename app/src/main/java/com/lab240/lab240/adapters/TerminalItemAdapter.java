@@ -19,12 +19,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class ItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
+public class TerminalItemAdapter extends RecyclerView.Adapter<ViewHolder>{
 
     final Map<Pair<String, Out>, Pair<String, Long>> values;
     final Multimap<Pair<String, Out>, ItemHolder.Updater> updaters;
 
-    public ItemAdapter(Multimap<Pair<String, Out>, ItemHolder.Updater> updaters, Map<Pair<String, Out>, Pair<String, Long>> values) {
+    public TerminalItemAdapter(Multimap<Pair<String, Out>, ItemHolder.Updater> updaters, Map<Pair<String, Out>, Pair<String, Long>> values) {
         this.values = values;
         this.updaters = updaters;
     }
@@ -33,32 +33,14 @@ public class ItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
 
     @NonNull
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         ViewHolder viewHolder;
         switch (viewType) {
             case ITEM:
-                ItemHolder itemHolder = new ItemHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_item, parent, false));
-                itemHolder.itemView.setOnClickListener(v -> {
-                    Log.i("action", "Click in ItemAdapter");
-                    parent.callOnClick();
-                });
-                itemHolder.itemView.setOnLongClickListener(v -> {
-                    Log.i("action", "Long click in ItemAdapter");
-                    return parent.performLongClick();
-                });
-                viewHolder = itemHolder;
+                viewHolder = new ItemHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_terminal_item, parent, false));
                 break;
             case RELAY:
-                RelayHolder relayHolder = new RelayHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_relay, parent, false));
-                relayHolder.itemView.setOnClickListener(v -> {
-                    Log.i("action", "Click in ItemAdapter");
-                    parent.callOnClick();
-                });
-                relayHolder.itemView.setOnLongClickListener(v -> {
-                    Log.i("action", "Click in ItemAdapter");
-                    return parent.performLongClick();
-                });
-                viewHolder = relayHolder;
+                viewHolder = new RelayHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_terminal_relay, parent, false));
                 break;
             default:
                 throw new RuntimeException("Unknown item type");
@@ -67,7 +49,7 @@ public class ItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Out out;
         switch (getItemViewType(position)) {
             case RELAY:
