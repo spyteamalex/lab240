@@ -62,7 +62,7 @@ public class ListActivity extends AppCompatActivity {
     ActivityResultLauncher<Intent> consoleLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
-                Log.i("info", "Result from terminal = "+result.getData().getDataString());
+                Log.i("info", "Result in ListActivity from terminal = "+result.getData().getDataString());
                 if (result.getResultCode() == Activity.RESULT_OK) {
                     Intent data = result.getData();
                     if(data == null || !data.hasExtra(TerminalActivity.RESULT) || !data.hasExtra(TerminalActivity.ID)) {
@@ -103,13 +103,13 @@ public class ListActivity extends AppCompatActivity {
         ga = new GroupAdapter(getSupportFragmentManager(), new DeviceHolder.Functions() {
             @Override
             public void call(Device device) {
-                Log.i("action", "Call terminal");
+                Log.i("action", "Call terminal in ListActivity");
                 if (!ListActivity.this.hasWindowFocus()) {
-                    Log.i("info", "No focus on calling terminal");
+                    Log.i("info", "No focus on calling terminal in ListActivity");
                     return;
                 }
                 if(Lab240.getMqtt() == null || !Lab240.getMqtt().isConnected()){
-                    Log.i("info", "No connection on calling terminal");
+                    Log.i("info", "No connection on calling terminal in ListActivity");
                     AlertSheetDialog asd = new AlertSheetDialog(ListActivity.this);
                     asd.addText(getResources().getString(R.string.no_connection));
                     asd.setCancelButtonText(getResources().getString(R.string.ok), AlertSheetDialog.ButtonType.DEFAULT);
@@ -124,14 +124,14 @@ public class ListActivity extends AppCompatActivity {
 
             @Override
             public void edit(Device d) {
-                Log.i("action", "Edit device");
+                Log.i("action", "Edit device in ListActivity");
                 editDevice(d);
                 update();
             }
 
             @Override
             public void delete(Device d) {
-                Log.i("action", "Delete device");
+                Log.i("action", "Delete device in ListActivity");
                 Lab240.getDevices().remove(d);
                 Lab240.saveDevices(ListActivity.this, Lab240.getDevices());
                 update();
@@ -139,7 +139,7 @@ public class ListActivity extends AppCompatActivity {
 
             @Override
             public void setGroup(Collection<Device> ds, String str) {
-                Log.i("action", "Edit group");
+                Log.i("action", "Edit group in ListActivity");
                 for(Device d: ds)
                     d.setGroup(str);
                 Lab240.saveDevices(ListActivity.this, Lab240.getDevices());
@@ -148,7 +148,7 @@ public class ListActivity extends AppCompatActivity {
 
             @Override
             public void delete(Collection<Device> d) {
-                Log.i("action", "Delete group");
+                Log.i("action", "Delete group in ListActivity");
                 Lab240.getDevices().removeAll(d);
                 Lab240.saveDevices(ListActivity.this, Lab240.getDevices());
                 update();
@@ -173,10 +173,10 @@ public class ListActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if(item.getItemId() == R.id.add) {
-            Log.i("action", "Add device");
+            Log.i("action", "Add device in ListActivity");
             editDevice();
         }else if(item.getItemId() == R.id.exit){
-            Log.i("action", "Exit");
+            Log.i("action", "Exit in ListActivity");
             exit();
         }
         return super.onOptionsItemSelected(item);
@@ -187,7 +187,7 @@ public class ListActivity extends AppCompatActivity {
     }
 
     public void editDevice(@Nullable Device device){
-        Log.i("action", "Editing device (New = "+(device == null)+")");
+        Log.i("action", "Editing device (New = "+(device == null)+") in ListActivity");
         final boolean editing = device != null;
         AlertSheetDialog asd2 = new AlertSheetDialog(this);
         asd2.show(getSupportFragmentManager(), "");
@@ -386,14 +386,14 @@ public class ListActivity extends AppCompatActivity {
         reconnectTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                Log.i("action", "Reconnect");
+                Log.i("action", "Reconnect in ListActivity");
                 reconnect();
             }
         }, 0, RECONNECTION_PERIOD);
     }
 
     public void reconnect(){
-        Log.i("call", "Reconnect");
+        Log.i("call", "Reconnect in ListActivity");
         Lab240.getMqtt().connect(this, new IMqttActionListener() {
             public void onSuccess(IMqttToken asyncActionToken) {
                 Log.i("info", "Successful connection in reconnect() in ListActivity");
@@ -429,7 +429,7 @@ public class ListActivity extends AppCompatActivity {
         updateTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                Log.i("action", "Auto update");
+                Log.i("action", "Auto update in ListActivity");
                 runOnUiThread(ListActivity.this::update);
             }
         }, UPDATE_PERIOD, UPDATE_PERIOD);
@@ -440,7 +440,7 @@ public class ListActivity extends AppCompatActivity {
     }
 
     private void exit(){
-        Log.i("call", "Exit");
+        Log.i("call", "Exit in ListActivity");
         Lab240.exit(this);
         finish();
     }

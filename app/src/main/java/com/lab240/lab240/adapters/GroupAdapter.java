@@ -68,7 +68,6 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder> {
 
     public Set<Pair<String, MQTT.MessageCallback>> callbacks = new HashSet<>();
 
-    public static final String OUT_DEFAULT = "—";
     public static final long MAX_NO_MSG_TIME = 1000 * 60 * 5;
 
     public synchronized void setData(Collection<Device> data) {
@@ -110,7 +109,7 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder> {
                     });
                     MQTT.MessageCallback mc = (topic, msg) -> {
                         values.put(Pair.create(d.getIdentificator(), o), Pair.create(msg.toString(), System.currentTimeMillis()));
-                        updateValues(d.getIdentificator(), o, OUT_DEFAULT);
+                        updateValues(d.getIdentificator(), o);
                     };
                     Lab240.getMqtt().addListener(path, mc);
                     callbacks.add(Pair.create(path, mc));
@@ -129,7 +128,7 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder> {
                     });
                     MQTT.MessageCallback mc = (topic, msg) -> {
                         values.put(Pair.create(d.getIdentificator(), o), Pair.create(msg.toString(), System.currentTimeMillis()));
-                        updateValues(d.getIdentificator(), o, ItemHolder.RELAY_DEFAULT);
+                        updateValues(d.getIdentificator(), o);
                     };
                     Lab240.getMqtt().addListener(path, mc);
                     callbacks.add(Pair.create(path, mc));
@@ -141,9 +140,9 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder> {
         notifyDataSetChanged();
     }
 
-    public synchronized void updateValues(String device, Out out, String def) {
+    public synchronized void updateValues(String device, Out out) {
         Pair<String, Out> p = Pair.create(device, out);
-        String str = values.containsKey(p) ? values.get(p).first : def;
+        String str = values.containsKey(p) ? values.get(p).first : null;
         for (ItemHolder.Updater i : updaters.get(p)) {
             i.update(str);
         }

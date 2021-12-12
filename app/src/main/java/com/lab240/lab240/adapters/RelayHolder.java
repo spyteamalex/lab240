@@ -6,6 +6,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.lab240.devices.Out;
@@ -26,7 +27,7 @@ public class RelayHolder extends RecyclerView.ViewHolder{
         updater = this::update;
     }
 
-    public void update(String v){
+    public void update(@Nullable String v){
         value.setImageResource("1".equals(v) ? R.drawable.relay_on_image : R.drawable.relay_off_image);
     }
 }

@@ -16,7 +16,6 @@ import android.widget.LinearLayout;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -48,8 +47,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import static com.lab240.lab240.adapters.GroupAdapter.OUT_DEFAULT;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 public class TerminalActivity extends AppCompatActivity {
@@ -79,13 +78,17 @@ public class TerminalActivity extends AppCompatActivity {
     public Set<Pair<String, MQTT.MessageCallback>> callbacks = new HashSet<>();
     final LinkedList<String> hints = new LinkedList<>();
     LinearLayout bars;
+    Timer updateTimer;
+    TerminalItemAdapter ia;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_terminal);
+        Log.i("call", "Create TerminalActivity");
         Bundle extras = getIntent().getExtras();
         if(!extras.containsKey(DEVICE)) {
             setResult(RESULT_CANCELED);
+            Log.i("info", "no data for TerminalActivity");
             finish();
             return;
         }
@@ -119,7 +122,7 @@ public class TerminalActivity extends AppCompatActivity {
             });
             MQTT.MessageCallback mc = (topic, msg) -> {
                 values.put(Pair.create(device.getIdentificator(), o), Pair.create(msg.toString(), System.currentTimeMillis()));
-                updateValues(device.getIdentificator(), o, OUT_DEFAULT);
+                updateValues(device.getIdentificator(), o);
             };
             Lab240.getMqtt().addListener(path, mc);
             callbacks.add(Pair.create(path, mc));
@@ -138,12 +141,12 @@ public class TerminalActivity extends AppCompatActivity {
             });
             MQTT.MessageCallback mc = (topic, msg) -> {
                 values.put(Pair.create(device.getIdentificator(), o), Pair.create(msg.toString(), System.currentTimeMillis()));
-                updateValues(device.getIdentificator(), o, ItemHolder.RELAY_DEFAULT);
+                updateValues(device.getIdentificator(), o);
             };
             Lab240.getMqtt().addListener(path, mc);
             callbacks.add(Pair.create(path, mc));
         }
-        TerminalItemAdapter ia = new TerminalItemAdapter(updaters, values);
+        ia = new TerminalItemAdapter(updaters, values);
         this.relays = findViewById(R.id.relays);
         this.relays.setAdapter(ia);
         ia.setData(device.getIdentificator(),device.getRelays(), device.getOuts());
@@ -161,6 +164,7 @@ public class TerminalActivity extends AppCompatActivity {
 
 
         HintAdapter historyHintAdapter = new HintAdapter(getSupportFragmentManager(), str -> {
+            Log.i("action", "history message \""+str+"\" selected in TerminalActivity");
             cmd.setText(str);
             cmd.requestFocus();
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -171,15 +175,16 @@ public class TerminalActivity extends AppCompatActivity {
 
         send.setOnClickListener(view -> {
             String c = cmd.getText().toString();
+            Log.i("action", "\""+c+"\" sended in TerminalActivity");
             cmd.setText("");
             send(c);
             hints.addFirst(c);
             historyHintAdapter.setData(hints);
 
-
         });
 
         HintAdapter setterHintAdapter = new HintAdapter(getSupportFragmentManager(), str -> {
+            Log.i("action", "setter \""+str+"\" selected in TerminalActivity");
             cmd.setText(str);
             cmd.requestFocus();
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -190,6 +195,7 @@ public class TerminalActivity extends AppCompatActivity {
         setterHints.setAdapter(setterHintAdapter);
 
         HintAdapter getterHintAdapter = new HintAdapter(getSupportFragmentManager(), str -> {
+            Log.i("action", "getter \""+str+"\" selected in TerminalActivity");
             cmd.setText(str);
             cmd.requestFocus();
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -211,9 +217,9 @@ public class TerminalActivity extends AppCompatActivity {
 
     }
 
-    public synchronized void updateValues(String device, Out out, String def) {
+    public synchronized void updateValues(String device, Out out) {
         Pair<String, Out> p = Pair.create(device, out);
-        String str = values.containsKey(p) ? values.get(p).first : def;
+        String str = values.containsKey(p) ? values.get(p).first : null;
         for (ItemHolder.Updater i : updaters.get(p)) {
             i.update(str);
         }
@@ -222,6 +228,7 @@ public class TerminalActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Log.i("call", "Destroy TerminalActivity");
         Lab240.getMqtt().removeListener(out, outCallback);
         Lab240.getMqtt().unsubscribe(out, KEY);
         Lab240.getMqtt().removeListener(in, inCallback);
@@ -231,6 +238,7 @@ public class TerminalActivity extends AppCompatActivity {
     }
 
     public void send(String value){
+        Log.i("call", "send in TerminalActivity");
         if(Lab240.getMqtt().isConnected())
             Lab240.getMqtt().send(in, value, 0);
         else {
@@ -245,6 +253,7 @@ public class TerminalActivity extends AppCompatActivity {
     }
 
     public void handleNoConnection(){
+        Log.i("call", "Handling no connection in TerminalActivity");
         AlertSheetDialog asd = new AlertSheetDialog(this);
         asd.addText(getResources().getString(R.string.connection_lost));
         asd.setCancelButtonText(getResources().getString(R.string.ok), AlertSheetDialog.ButtonType.DEFAULT);
@@ -253,19 +262,43 @@ public class TerminalActivity extends AppCompatActivity {
     }
 
     private MQTT.LostConnectionCallback lcc = null;
+    public static final long MAX_NO_MSG_TIME = 1000 * 60 * 5;
+
+    public void checkOutValues(){
+        for(Map.Entry<Pair<String, Out>, Pair<String, Long>> v : new HashSet<>(values.entrySet())){
+            if(System.currentTimeMillis()-v.getValue().second >= MAX_NO_MSG_TIME){
+                values.remove(v.getKey());
+                updateValues(device.getIdentificator(), v.getKey().second);
+            }
+        }
+    }
 
     @Override
     protected void onPause() {
         super.onPause();
+        Log.i("call", "Pause ListActivity");
         if(lcc != null)
             Lab240.getMqtt().removeOnConnectionLostCallback(lcc);
+        if(updateTimer != null)
+            updateTimer.cancel();
     }
+
+    public final static int UPDATE_PERIOD = 1000*60*5;
 
     @Override
     protected void onResume() {
         super.onResume();
+        Log.i("call", "Resume ListActivity");
         if(lcc != null)
             Lab240.getMqtt().addOnConnectionLostCallback(lcc);
+        updateTimer = new Timer();
+        updateTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                Log.i("action", "Autocheck in TerminalActivity");
+                runOnUiThread(TerminalActivity.this::checkOutValues);
+            }
+        }, UPDATE_PERIOD, UPDATE_PERIOD);
     }
 
     public void setResult(List<OutLine> outs){
@@ -278,6 +311,7 @@ public class TerminalActivity extends AppCompatActivity {
     }
 
     public void prepareTopics(){
+        Log.i("call", "prepareTopics in ListActivity");
         if(!Lab240.getMqtt().isConnected()){
             return;
         }
@@ -310,6 +344,7 @@ public class TerminalActivity extends AppCompatActivity {
     }
 
     public void update(List<OutLine> data){
+        Log.i("call", "update in ListActivity");
         ta.setData(data);
         setResult(data);
     }
@@ -323,9 +358,11 @@ public class TerminalActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (android.R.id.home == item.getItemId()) {
+            Log.i("action", "return from ListActivity");
             onBackPressed();
             return true;
         }else if(item.getItemId() == R.id.showBars) {
+            Log.i("action", (areBarsVisible ? "hide" : "show") + " bars ListActivity");
             setBarsVisible(!areBarsVisible);
             return true;
         }

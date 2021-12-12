@@ -1,6 +1,5 @@
 package com.lab240.lab240.adapters;
 
-import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
@@ -79,7 +78,7 @@ public class TerminalItemAdapter extends RecyclerView.Adapter<ViewHolder>{
                 if (values.containsKey(itemP))
                     itemHolder.update(values.get(itemP).first);
                 else
-                    itemHolder.update("—");
+                    itemHolder.update(ItemHolder.OUT_DEFAULT);
                 break;
         }
     }
