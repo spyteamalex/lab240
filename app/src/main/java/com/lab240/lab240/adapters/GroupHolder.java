@@ -17,9 +17,10 @@ import com.google.common.collect.Multimap;
 import com.lab240.devices.Out;
 import com.lab240.lab240.R;
 import com.lab240.utils.AlertSheetDialog;
+import com.lab240.utils.Lab240;
 
+import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 public class GroupHolder extends RecyclerView.ViewHolder{
 
@@ -29,7 +30,7 @@ public class GroupHolder extends RecyclerView.ViewHolder{
     String group;
 
 
-    public GroupHolder(FragmentManager fm, Set<String> opened, @NonNull View itemView, Multimap<Pair<String, Out>, ItemHolder.Updater> updaters, Map<Pair<String, Out>, Pair<String, Long>> values, @Nullable DeviceHolder.Functions tc) {
+    public GroupHolder(FragmentManager fm, @NonNull View itemView, Multimap<Pair<String, Out>, ItemHolder.Updater> updaters, Map<Pair<String, Out>, Pair<String, Long>> values, @Nullable DeviceHolder.Functions tc) {
         super(itemView);
         devices = itemView.findViewById(R.id.devices);
         adapter = new DeviceAdapter(fm, updaters, values, tc);
@@ -37,15 +38,16 @@ public class GroupHolder extends RecyclerView.ViewHolder{
         name = itemView.findViewById(R.id.name);
 
         itemView.setOnClickListener(view ->{
-            if(opened.contains(group)) {
+            if(!Lab240.getHiddenGroups().contains(group)) {
                 Log.i("action", "Hide GroupHolder");
-                opened.remove(group);
-                setVisible(false, true);
+                Lab240.getHiddenGroups().add(group);
+                setVisible(false);
             }else {
                 Log.i("action", "Unhide GroupHolder");
-                opened.add(group);
-                setVisible(true, true);
+                Lab240.getHiddenGroups().remove(group);
+                setVisible(true);
             }
+            Lab240.saveHiddenGroups(devices.getContext(), Lab240.getHiddenGroups());
         });
         itemView.setOnLongClickListener(view -> {
             Log.i("action", "Call context menu in GroupHolder");
@@ -70,12 +72,12 @@ public class GroupHolder extends RecyclerView.ViewHolder{
         });
     }
 
-    public void setVisible(boolean v, boolean animate){
+    public void setVisible(boolean v){
         if(v){
             name.setText(group);
             devices.setVisibility(View.VISIBLE);
         }else {
-            name.setText(String.format("%s(%d)", group, adapter.getItemCount()));
+            name.setText(String.format(Locale.getDefault(), "%s(%d)", group, adapter.getItemCount()));
             devices.setVisibility(View.GONE);
         }
     }

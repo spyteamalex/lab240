@@ -1,6 +1,5 @@
 package com.lab240.lab240;
 
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,10 +19,10 @@ import com.lab240.utils.MQTT;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
-import org.eclipse.paho.client.mqttv3.MqttException;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -48,7 +47,7 @@ public class LoginActivity extends AppCompatActivity {
         Lab240.Config conf;
         if((conf = config.orNull()) != null){
             Log.i("info", "Autocheck in LoginActivity");
-            check(conf.name, conf.pass, conf.devices, true);
+            check(conf.name, conf.pass, conf.devices, conf.hiddenGroups, true);
         }else{
             loginLayout.setVisibility(View.VISIBLE);
             progressBar.setVisibility(View.GONE);
@@ -58,10 +57,10 @@ public class LoginActivity extends AppCompatActivity {
 
     protected void next(View v){
         Log.i("call", "Next in LoginActivity");
-        check(name.getText().toString(), pass.getText().toString(), Collections.emptyList(), true);
+        check(name.getText().toString(), pass.getText().toString(), Collections.emptyList(), Collections.emptySet(), true);
     }
 
-    protected void check(String name, String pass, List<Device> devices, boolean openFailDialog){
+    protected void check(String name, String pass, List<Device> devices, Set<String> groups, boolean openFailDialog){
         Log.i("call", "Check in LoginActivity");
         loginLayout.setVisibility(View.GONE);
         progressBar.setVisibility(View.VISIBLE);
@@ -74,8 +73,10 @@ public class LoginActivity extends AppCompatActivity {
                 Lab240.setMqtt(mqtt);
                 Lab240.getDevices().clear();
                 Lab240.getDevices().addAll(devices);
+                Lab240.getHiddenGroups().clear();
+                Lab240.getHiddenGroups().addAll(groups);
 
-                Lab240.saveConfig(LoginActivity.this, new Lab240.Config(name, pass, devices));
+                Lab240.saveConfig(LoginActivity.this, new Lab240.Config(name, pass, devices, groups));
                 Intent i = new Intent(LoginActivity.this, ListActivity.class);
                 startActivity(i);
                 finish();
@@ -91,9 +92,7 @@ public class LoginActivity extends AppCompatActivity {
                     AlertSheetDialog asd = new AlertSheetDialog(LoginActivity.this);
                     asd.setCloseOnAction(false);
                     asd.addText(getResources().getString(R.string.login_fail));
-                    asd.addButton(getResources().getString(R.string.try_again), btn -> {
-                        check(name, pass, devices, false);
-                    }, AlertSheetDialog.ButtonType.DEFAULT);
+                    asd.addButton(getResources().getString(R.string.try_again), btn -> check(name, pass, devices, groups, false), AlertSheetDialog.ButtonType.DEFAULT);
                     asd.setCancelButtonText(getResources().getString(R.string.cancel), AlertSheetDialog.ButtonType.DESTROY);
                     asd.show(getSupportFragmentManager(), "");
                 }

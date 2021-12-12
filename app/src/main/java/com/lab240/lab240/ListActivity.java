@@ -161,7 +161,7 @@ public class ListActivity extends AppCompatActivity {
 
     public void update(){
         Log.i("call", "Update ListActivity");
-        ga.setData(Lab240.getDevices());
+        ga.updateData();
     }
 
     @Override

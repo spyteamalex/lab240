@@ -22,7 +22,6 @@ import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,7 +34,7 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder> {
     @NonNull
     @Override
     public GroupHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new GroupHolder(fm, opened, LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_group, parent, false), updaters, values, tc);
+        return new GroupHolder(fm, LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_group, parent, false), updaters, values, tc);
     }
 
     @Override
@@ -43,7 +42,7 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder> {
         String g = groups.get(position);
         holder.group = g;
         holder.adapter.setData(devices.get(g));
-        holder.setVisible(opened.contains(g), false);
+        holder.setVisible(!Lab240.getHiddenGroups().contains(g));
     }
 
     @Override
@@ -59,8 +58,6 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder> {
     DeviceHolder.Functions tc;
     private final FragmentManager fm;
 
-    private final Set<String> opened = new HashSet<>();
-
     public GroupAdapter(FragmentManager fm, @Nullable DeviceHolder.Functions tc) {
         this.tc = tc;
         this.fm = fm;
@@ -70,13 +67,13 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder> {
 
     public static final long MAX_NO_MSG_TIME = 1000 * 60 * 5;
 
-    public synchronized void setData(Collection<Device> data) {
+    public synchronized void updateData() {
         for (Pair<String, MQTT.MessageCallback> p : callbacks)
             Lab240.getMqtt().removeListener(p.first, p.second);
         callbacks.clear();
         groups.clear();
         devices.clear();
-        for (Device d : data) {
+        for (Device d : Lab240.getDevices()) {
             for (Out o : d.getOuts()) {
                 Pair<String, Out> p = Pair.create(d.getIdentificator(), o);
                 if(values.containsKey(p) &&
