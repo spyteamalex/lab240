@@ -3,26 +3,27 @@ package com.lab240.devices;
 import com.lab240.utils.Comparator;
 
 import java.util.Arrays;
-import java.util.Objects;
+import java.util.Collections;
+import java.util.List;
 
 public class Out implements Comparable<Out>  {
 
-    public String getName() {
+    public final String getName() {
         return name;
     }
 
     public Out(String name, String... path) {
         this.name = name;
-        this.path = path;
+        this.path = Collections.unmodifiableList(Arrays.asList(path));
     }
 
     private final String name;
 
-    public String[] getPath() {
+    public final List<String> getPath() {
         return path;
     }
 
-    private final String[] path;
+    private final List<String> path;
 
     @Override
     public int compareTo(Out out) {
@@ -31,13 +32,6 @@ public class Out implements Comparable<Out>  {
         if(names != 0)
             return names;
         return paths;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = name.hashCode();
-        result = 31 * result + Arrays.hashCode(path);
-        return result;
     }
 
     @Override

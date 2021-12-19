@@ -23,6 +23,7 @@ import com.google.common.collect.Multimap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.lab240.devices.Device;
+import com.lab240.devices.DeviceTypes;
 import com.lab240.devices.Out;
 import com.lab240.devices.OutLine;
 import com.lab240.lab240.adapters.HintAdapter;
@@ -39,6 +40,7 @@ import org.eclipse.paho.client.mqttv3.IMqttToken;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -104,9 +106,9 @@ public class TerminalActivity extends AppCompatActivity {
         setBarsVisible(false);
 
         device = gson.fromJson(intent.getStringExtra(DEVICE), Device.class);
-        in = Lab240.getOutPath(device, device.getType().mainIn);
-        out = Lab240.getOutPath(device, device.getType().mainOut);
-        log = Lab240.getOutPath(device, device.getType().log);
+        in = Lab240.getOutPath(device, DeviceTypes.mainIn);
+        out = Lab240.getOutPath(device, DeviceTypes.mainOut);
+        log = Lab240.getOutPath(device, DeviceTypes.log);
 
         for (Out o : device.getOuts()) {
             String path = Lab240.getOutPath(device, o);
@@ -165,7 +167,7 @@ public class TerminalActivity extends AppCompatActivity {
 
         HintAdapter historyHintAdapter = new HintAdapter(getSupportFragmentManager(), str -> {
             Log.i("action", "history message \""+str+"\" selected in TerminalActivity");
-            cmd.setText(str);
+            cmd.setText(cmd.getText()+(cmd.getText().length() == 0 || cmd.getText().charAt(cmd.getText().length()-1) == ' ' ? "" : " ") + str);
             cmd.requestFocus();
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.showSoftInput(cmd, InputMethodManager.SHOW_IMPLICIT);
@@ -175,34 +177,36 @@ public class TerminalActivity extends AppCompatActivity {
 
         send.setOnClickListener(view -> {
             String c = cmd.getText().toString();
+            if(c.matches("^\\w*$"))
+                return;
             Log.i("action", "\""+c+"\" sended in TerminalActivity");
             cmd.setText("");
             send(c);
+            hints.removeAll(Collections.singletonList(c));
             hints.addFirst(c);
             historyHintAdapter.setData(hints);
-
         });
 
         HintAdapter setterHintAdapter = new HintAdapter(getSupportFragmentManager(), str -> {
             Log.i("action", "setter \""+str+"\" selected in TerminalActivity");
-            cmd.setText(str);
+            cmd.setText(cmd.getText()+(cmd.getText().length() == 0 || cmd.getText().charAt(cmd.getText().length()-1) == ' ' ? "" : " ") + str);
             cmd.requestFocus();
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.showSoftInput(cmd, InputMethodManager.SHOW_IMPLICIT);
             cmd.setSelection(cmd.getText().length());
         });
-        setterHintAdapter.setData(Arrays.asList(device.getType().setterHints));
+        setterHintAdapter.setData(Lab240.getDeviceTypes().get(device.getType()).setterHints);
         setterHints.setAdapter(setterHintAdapter);
 
         HintAdapter getterHintAdapter = new HintAdapter(getSupportFragmentManager(), str -> {
             Log.i("action", "getter \""+str+"\" selected in TerminalActivity");
-            cmd.setText(str);
+            cmd.setText(cmd.getText()+(cmd.getText().length() == 0 || cmd.getText().charAt(cmd.getText().length()-1) == ' ' ? "" : " ") + str);
             cmd.requestFocus();
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.showSoftInput(cmd, InputMethodManager.SHOW_IMPLICIT);
             cmd.setSelection(cmd.getText().length());
         });
-        getterHintAdapter.setData(Arrays.asList(device.getType().getterHints));
+        getterHintAdapter.setData(Lab240.getDeviceTypes().get(device.getType()).getterHints);
         getterHints.setAdapter(getterHintAdapter);
 
         if(getSupportActionBar() != null) {

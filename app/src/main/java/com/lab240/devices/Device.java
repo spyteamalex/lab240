@@ -12,7 +12,13 @@ public class Device {
     private String name;
     private String group;
     private final long id;      //Уникальный номер
-    private final Devices type;
+
+    public Device setType(long type) {
+        this.type = type;
+        return this;
+    }
+
+    private long type;
     private final Set<Out> outs = new TreeSet<>();
     private final Set<Out> relays = new TreeSet<>();
 
@@ -26,7 +32,7 @@ public class Device {
         return identificator;
     }
 
-    public Devices getType() {
+    public long getType() {
         return type;
     }
 
@@ -65,11 +71,23 @@ public class Device {
         return relays;
     }
 
-    public Device(String name, String identificator, String group, long id, Devices type) {
+    public Device(String name, String identificator, String group, long id, long type) {
         this.name = name;
         this.identificator = identificator;
         this.group = group;
         this.id = id;
         this.type = type;
+    }
+
+    public Device(String name, String identificator, String group, long id, long type, Set<Out> relays, Set<Out> outs) {
+        this.name = name;
+        this.identificator = identificator;
+        this.group = group;
+        this.id = id;
+        this.type = type;
+        this.relays.clear();
+        this.relays.addAll(relays);
+        this.outs.clear();
+        this.outs.addAll(outs);
     }
 }

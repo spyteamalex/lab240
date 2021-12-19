@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.common.base.Optional;
 import com.lab240.devices.Device;
+import com.lab240.devices.DeviceTypes;
 import com.lab240.utils.AlertSheetDialog;
 import com.lab240.utils.Lab240;
 import com.lab240.utils.MQTT;
@@ -20,9 +21,13 @@ import com.lab240.utils.MQTT;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -47,7 +52,7 @@ public class LoginActivity extends AppCompatActivity {
         Lab240.Config conf;
         if((conf = config.orNull()) != null){
             Log.i("info", "Autocheck in LoginActivity");
-            check(conf.name, conf.pass, conf.devices, conf.hiddenGroups, true);
+            check(conf.name, conf.pass, conf.devices, conf.hiddenGroups, conf.deviceTypes,true);
         }else{
             loginLayout.setVisibility(View.VISIBLE);
             progressBar.setVisibility(View.GONE);
@@ -57,10 +62,10 @@ public class LoginActivity extends AppCompatActivity {
 
     protected void next(View v){
         Log.i("call", "Next in LoginActivity");
-        check(name.getText().toString(), pass.getText().toString(), Collections.emptyList(), Collections.emptySet(), true);
+        check(name.getText().toString(), pass.getText().toString(), new ArrayList<>(), new TreeSet<>(), Lab240.DEFAULT_TYPES, true);
     }
 
-    protected void check(String name, String pass, List<Device> devices, Set<String> groups, boolean openFailDialog){
+    protected void check(String name, String pass, List<Device> devices, Set<String> groups, Map<Long, DeviceTypes> deviceTypes, boolean openFailDialog){
         Log.i("call", "Check in LoginActivity");
         loginLayout.setVisibility(View.GONE);
         progressBar.setVisibility(View.VISIBLE);
@@ -70,13 +75,10 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onSuccess(IMqttToken asyncActionToken) {
                 Log.i("info", "Successful connection in LoginActivity");
-                Lab240.setMqtt(mqtt);
-                Lab240.getDevices().clear();
-                Lab240.getDevices().addAll(devices);
-                Lab240.getHiddenGroups().clear();
-                Lab240.getHiddenGroups().addAll(groups);
+                Lab240.Config c = new Lab240.Config(name, pass, devices, groups, deviceTypes);
+                Lab240.setConfig(mqtt, c);
 
-                Lab240.saveConfig(LoginActivity.this, new Lab240.Config(name, pass, devices, groups));
+                Lab240.saveConfig(LoginActivity.this, c);
                 Intent i = new Intent(LoginActivity.this, ListActivity.class);
                 startActivity(i);
                 finish();
@@ -92,7 +94,7 @@ public class LoginActivity extends AppCompatActivity {
                     AlertSheetDialog asd = new AlertSheetDialog(LoginActivity.this);
                     asd.setCloseOnAction(false);
                     asd.addText(getResources().getString(R.string.login_fail));
-                    asd.addButton(getResources().getString(R.string.try_again), btn -> check(name, pass, devices, groups, false), AlertSheetDialog.ButtonType.DEFAULT);
+                    asd.addButton(getResources().getString(R.string.try_again), btn -> check(name, pass, devices, groups, deviceTypes,false), AlertSheetDialog.ButtonType.DEFAULT);
                     asd.setCancelButtonText(getResources().getString(R.string.cancel), AlertSheetDialog.ButtonType.DESTROY);
                     asd.show(getSupportFragmentManager(), "");
                 }

@@ -13,6 +13,7 @@ import com.google.common.collect.Multimap;
 import com.lab240.devices.Device;
 import com.lab240.devices.Out;
 import com.lab240.lab240.R;
+import com.lab240.utils.Lab240;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -46,7 +47,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceHolder>{
         Device d = devices.get(position);
         holder.item = d;
         holder.name.setText(d.getName());
-        holder.type.setText(String.format(Locale.getDefault(), "%s %s", d.getType().name, d.getIdentificator()));
+         holder.type.setText(String.format(Locale.getDefault(), "%s %s", Lab240.getDeviceTypes().get(d.getType()).name, d.getIdentificator()));
         holder.adapter.setData(d.getIdentificator(), d.getRelays(), d.getOuts());
     }
 

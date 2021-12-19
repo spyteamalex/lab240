@@ -32,15 +32,16 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.lab240.devices.Device;
-import com.lab240.devices.Devices;
+import com.lab240.devices.DeviceTypes;
 import com.lab240.devices.Out;
 import com.lab240.devices.OutLine;
 import com.lab240.lab240.adapters.DeviceHolder;
-import com.lab240.utils.GravityArrayAdapter;
 import com.lab240.lab240.adapters.GroupAdapter;
 import com.lab240.utils.AlertSheetDialog;
+import com.lab240.utils.GravityArrayAdapter;
 import com.lab240.utils.Lab240;
 import com.lab240.utils.MQTT;
+import com.lab240.utils.ShowableAdapter;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
@@ -49,6 +50,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -178,6 +180,20 @@ public class ListActivity extends AppCompatActivity {
         }else if(item.getItemId() == R.id.exit){
             Log.i("action", "Exit in ListActivity");
             exit();
+        }else if(item.getItemId() == R.id.export){
+            Log.i("action", "Export in ListActivity");
+
+            //todo change
+            System.out.println(Lab240.toDeviceConfig(Lab240.getDevices(), Lab240.getDeviceTypes()));
+        }else if(item.getItemId() == R.id.imprt){
+            Log.i("action", "Export in ListActivity");
+
+            //todo change
+            Pair<List<Device>, Map<Long, DeviceTypes>> res = Lab240.fromDeviceConfig("{\"Devices\":[{\"consoleLasts\":[],\"group\":\"uh\",\"id\":1639946833682,\"identificator\":\"lab\",\"name\":\"test\",\"outs\":[{\"name\":\"current\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"strong_sec\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"temp_in\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"time_up\",\"path\":[\"out\"]}],\"relays\":[{\"name\":\"r1\",\"path\":[\"out\",\"relays\"]},{\"name\":\"r2\",\"path\":[\"out\",\"relays\"]}],\"type\":4}],\"Device Types\":{\"0\":{\"getterHints\":[],\"id\":0,\"name\":\"Устройство\",\"outs\":[],\"relays\":[],\"setterHints\":[]},\"1\":{\"getterHints\":[\"aofs\",\"a2ofs\"],\"id\":1,\"name\":\"Контроль станции\",\"outs\":[{\"name\":\"current\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"strong_sec\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"temp_in\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"temp_out\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"time_up\",\"path\":[\"out\"]}],\"relays\":[{\"name\":\"r1\",\"path\":[\"out\",\"relays\"]}],\"setterHints\":[\"tlevels\",\"tls\"]},\"2\":{\"getterHints\":[\"aofs\",\"a2ofs\"],\"id\":2,\"name\":\"Термостат\",\"outs\":[{\"name\":\"temp_in\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"temp_out\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"time_up\",\"path\":[\"out\"]}],\"relays\":[{\"name\":\"r1\",\"path\":[\"out\",\"relays\"]}],\"setterHints\":[\"tlevels\",\"tls\"]},\"3\":{\"getterHints\":[\"aofs\",\"a2ofs\"],\"id\":3,\"name\":\"Розетка с таймером\",\"outs\":[{\"name\":\"temp_in\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"time_up\",\"path\":[\"out\"]}],\"relays\":[{\"name\":\"r1\",\"path\":[\"out\",\"relays\"]},{\"name\":\"r2\",\"path\":[\"out\",\"relays\"]}],\"setterHints\":[\"tlevels\",\"tls\"]},\"4\":{\"getterHints\":[\"aofs\",\"a2ofs\"],\"id\":4,\"name\":\"Розетка с контролем тока\",\"outs\":[{\"name\":\"current\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"strong_sec\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"temp_in\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"time_up\",\"path\":[\"out\"]}],\"relays\":[{\"name\":\"r1\",\"path\":[\"out\",\"relays\"]},{\"name\":\"r2\",\"path\":[\"out\",\"relays\"]}],\"setterHints\":[\"tlevels\",\"tls\"]}}}");
+            Lab240.getDeviceTypes().putAll(res.second);
+            Lab240.getDevices().addAll(res.first);
+            Lab240.saveDevices(ListActivity.this, Lab240.getDevices());
+            update();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -218,12 +234,8 @@ public class ListActivity extends AppCompatActivity {
         group.setSingleLine(true);
         if(editing) group.setText(device.getGroup());
 
-        List<String> devicesString = new ArrayList<>();
-        for(Devices d : Devices.values()) {
-            devicesString.add(d.name);
-        }
-
-        GravityArrayAdapter<String> typeAdapter = new GravityArrayAdapter<>(this, android.R.layout.simple_spinner_item, devicesString);
+        ArrayList<DeviceTypes> typesList = new ArrayList<>(Lab240.getDeviceTypes().values());
+        ShowableAdapter<DeviceTypes> typeAdapter = new ShowableAdapter<>(this, android.R.layout.simple_spinner_item, typesList);
         typeAdapter.setGravity(Gravity.CENTER);
         typeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
@@ -243,48 +255,78 @@ public class ListActivity extends AppCompatActivity {
         type.setAdapter(typeAdapter);
         type.setPrompt(getResources().getString(R.string.device));
         type.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            DeviceTypes selected = null;
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                DeviceTypes devices = (DeviceTypes) type.getSelectedItem();
+
                 outsLayout.removeAllViews();
                 relaysLayout.removeAllViews();
                 outs.clear();
                 relays.clear();
-                Devices devices = Devices.values()[type.getSelectedItemPosition()];
-                for(Out o : devices.outs){
+
+                List<Out> outs1 = new ArrayList<>(outs);
+                if(selected != null) outs1.removeAll(selected.outs);
+                outs1.addAll(devices.outs);
+
+                List<Out> relays1 = new ArrayList<>();
+                if(selected != null) relays1.removeAll(selected.relays);
+                relays1.addAll(devices.relays);
+
+                for(Out o : outs1){
                     CheckBox cb = new CheckBox(view.getContext());
                     cb.setOnCheckedChangeListener((compoundButton, b) -> {
                         if(b)
                             outs.add(o);
                         else{
                             outs.remove(o);
+                            if(!devices.outs.contains(o)) {
+                                outsLayout.removeView(cb);
+                                outsLayout.setVisibility(outsLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
+                            }
                         }
                     });
-                    cb.setChecked(!editing || device.getOuts().contains(o));
+                    cb.setChecked(!editing || device.getOuts().contains(o) || (device.getType() != devices.id));
                     cb.setText(o.getName());
                     outsLayout.addView(cb);
                 }
-                for(Out o : devices.relays){
+
+                for(Out o : relays1){
                     CheckBox cb = new CheckBox(view.getContext());
                     cb.setOnCheckedChangeListener((compoundButton, b) -> {
                         if(b)
                             relays.add(o);
                         else{
                             relays.remove(o);
+                            if(!devices.relays.contains(o)) {
+                                relaysLayout.removeView(cb);
+                                relaysLayout.setVisibility(relaysLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
+                            }
                         }
                     });
-                    cb.setChecked(!editing || device.getRelays().contains(o));
+                    cb.setChecked(!editing || device.getRelays().contains(o) || (device.getType() != devices.id));
                     cb.setText(o.getName());
                     relaysLayout.addView(cb);
                 }
+
+                outsLayout.setVisibility(outsLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
+                relaysLayout.setVisibility(relaysLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
+
+                selected = devices;
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {}
         });
 
-        if(editing) type.setSelection(device.getType().ordinal());
-        else type.setSelection(0);
-        type.setEnabled(!editing);
+        if(device == null){
+            type.setSelection(typesList.indexOf(DeviceTypes.EMPTY));
+        }else{
+            int res = typesList.indexOf(Lab240.getDeviceTypes().get(device.getType()));
+            if(res == -1)
+                res = typesList.indexOf(DeviceTypes.EMPTY);
+            type.setSelection(res);
+        }
 
         Button doneButton;
         if(!editing) {
@@ -294,7 +336,7 @@ public class ListActivity extends AppCompatActivity {
                         groupSpinner.getSelectedItemPosition() != groupSpinner.getCount() - 1 ?
                                 groups2.get(groupSpinner.getSelectedItemPosition()) :
                                 group.getText().toString(),
-                        id, Devices.values()[type.getSelectedItemPosition()]);
+                        id, ((DeviceTypes) type.getSelectedItem()).id);
                 d.getOuts().addAll(outs);
                 d.getRelays().addAll(relays);
                 Lab240.getDevices().add(d);
@@ -311,6 +353,7 @@ public class ListActivity extends AppCompatActivity {
 
                 device.setName(name.getText().toString());
                 device.setIdentificator(iden.getText().toString());
+                device.setType(((DeviceTypes) type.getSelectedItem()).id);
                 device.setGroup(groupSpinner.getSelectedItemPosition() != groupSpinner.getCount()-1 ?
                         groups2.get(groupSpinner.getSelectedItemPosition()) :
                         group.getText().toString());
