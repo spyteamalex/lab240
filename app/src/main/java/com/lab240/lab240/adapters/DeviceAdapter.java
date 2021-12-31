@@ -13,7 +13,7 @@ import com.google.common.collect.Multimap;
 import com.lab240.devices.Device;
 import com.lab240.devices.Out;
 import com.lab240.lab240.R;
-import com.lab240.utils.Lab240;
+import com.lab240.devices.Lab240;
 
 import java.util.ArrayList;
 import java.util.Collection;

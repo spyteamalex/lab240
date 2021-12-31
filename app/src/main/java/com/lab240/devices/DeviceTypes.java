@@ -1,13 +1,12 @@
 package com.lab240.devices;
 
-import com.google.gson.Gson;
-import com.lab240.utils.Comparator;
 import com.lab240.utils.Showable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -194,6 +193,11 @@ public class DeviceTypes implements Showable {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(outs, relays, name, id, setterHints, getterHints);
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -204,10 +208,10 @@ public class DeviceTypes implements Showable {
         Collections.sort(setters2);
         Collections.sort(getters1);
         Collections.sort(getters2);
-        return Comparator.equals(outs, that.outs) &&
-                Comparator.equals(relays, that.relays) &&
-                Comparator.equals(name, that.name) &&
-                Comparator.equals(setters1, setters2) &&
-                Comparator.equals(getters1, getters2);
+        return Objects.equals(outs, that.outs) &&
+                Objects.equals(relays, that.relays) &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(setters1, setters2) &&
+                Objects.equals(getters1, getters2);
     }
 }

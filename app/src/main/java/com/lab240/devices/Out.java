@@ -5,6 +5,7 @@ import com.lab240.utils.Comparator;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class Out implements Comparable<Out>  {
 
@@ -15,6 +16,11 @@ public class Out implements Comparable<Out>  {
     public Out(String name, String... path) {
         this.name = name;
         this.path = Collections.unmodifiableList(Arrays.asList(path));
+    }
+
+    public Out(String name, List<String> path) {
+        this.name = name;
+        this.path = Collections.unmodifiableList(path);
     }
 
     private final String name;
@@ -32,6 +38,11 @@ public class Out implements Comparable<Out>  {
         if(names != 0)
             return names;
         return paths;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, path);
     }
 
     @Override

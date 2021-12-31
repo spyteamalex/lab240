@@ -15,15 +15,13 @@ import com.google.common.base.Optional;
 import com.lab240.devices.Device;
 import com.lab240.devices.DeviceTypes;
 import com.lab240.utils.AlertSheetDialog;
-import com.lab240.utils.Lab240;
-import com.lab240.utils.MQTT;
+import com.lab240.devices.Lab240;
+import com.lab240.devices.MQTT;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

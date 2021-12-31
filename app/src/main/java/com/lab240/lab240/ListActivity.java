@@ -1,6 +1,7 @@
 package com.lab240.lab240;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -12,6 +13,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -33,20 +36,21 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.lab240.devices.Device;
 import com.lab240.devices.DeviceTypes;
+import com.lab240.devices.Lab240;
+import com.lab240.devices.MQTT;
 import com.lab240.devices.Out;
 import com.lab240.devices.OutLine;
 import com.lab240.lab240.adapters.DeviceHolder;
 import com.lab240.lab240.adapters.GroupAdapter;
 import com.lab240.utils.AlertSheetDialog;
 import com.lab240.utils.GravityArrayAdapter;
-import com.lab240.utils.Lab240;
-import com.lab240.utils.MQTT;
 import com.lab240.utils.ShowableAdapter;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -193,6 +197,7 @@ public class ListActivity extends AppCompatActivity {
             Lab240.getDeviceTypes().putAll(res.second);
             Lab240.getDevices().addAll(res.first);
             Lab240.saveDevices(ListActivity.this, Lab240.getDevices());
+            Lab240.saveDeviceTypes(ListActivity.this, Lab240.getDeviceTypes());
             update();
         }
         return super.onOptionsItemSelected(item);
@@ -240,22 +245,150 @@ public class ListActivity extends AppCompatActivity {
         typeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
         List<Out> relays = new ArrayList<>();
-        LinearLayout relaysLayout = asd2.addView(new LinearLayout(this));
+        LinearLayout relaysLayout = new LinearLayout(this);
+        asd2.addView(relaysLayout);
         relaysLayout.setOrientation(LinearLayout.VERTICAL);
         relaysLayout.setGravity(Gravity.CENTER);
         relaysLayout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        relaysLayout.setPadding(
+                relaysLayout.getPaddingLeft(),
+                relaysLayout.getPaddingTop(),
+                relaysLayout.getPaddingRight(),
+                0);
+
+        List<Out> customRelays = new ArrayList<>();
+        if(editing) {
+            customRelays.addAll(device.getRelays());
+            customRelays.removeAll(Lab240.getDeviceTypes().get(device.getType()).relays);
+        }
+
+        Spinner type = new Spinner(this);
+
+        View newRelay = getLayoutInflater().inflate(R.layout.inflate_new_out_view, relaysLayout, false);
+        asd2.addView(newRelay);
+        newRelay.setPadding(
+                newRelay.getPaddingLeft(),
+                0,
+                newRelay.getPaddingRight(),
+                newRelay.getPaddingBottom());
+        EditText newRelayText = newRelay.findViewById(R.id.name);
+        newRelayText.setHint(R.string.new_relay_placeholder);
+        Runnable addRelay = ()->{
+            if(newRelayText.getText().length() != 0){
+                ArrayList<String> path = new ArrayList<>(Arrays.asList(newRelayText.getText().toString().split("/")));
+                String outName = path.get(path.size()-1);
+                path.remove(path.size()-1);
+                Out o = new Out(outName, path);
+                if(!((DeviceTypes)type.getSelectedItem()).relays.contains(o)) {
+                    CheckBox cb = new CheckBox(newRelay.getContext());
+                    cb.setOnCheckedChangeListener((compoundButton, b2) -> {
+                        if (b2)
+                            relays.add(o);
+                        else {
+                            relays.remove(o);
+                            customRelays.remove(o);
+                            relaysLayout.removeView(cb);
+                            relaysLayout.setVisibility(relaysLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
+                        }
+                    });
+                    cb.setChecked(true);
+                    cb.setText(o.getName());
+                    relaysLayout.setVisibility(View.VISIBLE);
+                    customRelays.add(o);
+                    relaysLayout.addView(cb);
+                }
+                newRelayText.setText("");
+                newRelayText.clearFocus();
+                InputMethodManager imm= (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(newRelayText.getWindowToken(), 0);
+            }
+        };
+        newRelayText.setOnFocusChangeListener((view1, b) -> {
+            if(!b){
+                addRelay.run();
+            }
+        });
+        newRelayText.setOnEditorActionListener((textView, i12, keyEvent) -> {
+            if (EditorInfo.IME_ACTION_DONE == i12) {
+                addRelay.run();
+            }
+            return false;
+        });
 
         List<Out> outs = new ArrayList<>();
-        LinearLayout outsLayout = asd2.addView(new LinearLayout(this));
+        LinearLayout outsLayout = new LinearLayout(this);
+        asd2.addView(outsLayout);
         outsLayout.setOrientation(LinearLayout.VERTICAL);
         outsLayout.setGravity(Gravity.CENTER);
         outsLayout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        outsLayout.setPadding(
+                outsLayout.getPaddingLeft(),
+                outsLayout.getPaddingTop(),
+                outsLayout.getPaddingRight(),
+                0);
 
-        Spinner type = asd2.addView(new Spinner(this));
+        List<Out> customOuts = new ArrayList<>();
+        if(editing) {
+            customOuts.addAll(device.getOuts());
+            customOuts.removeAll(Lab240.getDeviceTypes().get(device.getType()).outs);
+        }
+
+        View newOut = getLayoutInflater().inflate(R.layout.inflate_new_out_view, outsLayout, false);
+        asd2.addView(newOut);
+        newOut.setPadding(
+                newOut.getPaddingLeft(),
+                0,
+                newOut.getPaddingRight(),
+                newOut.getPaddingBottom());
+        EditText newOutText = newOut.findViewById(R.id.name);
+        newOutText.setHint(R.string.new_out_placeholder);
+        Runnable addOut = ()->{
+            if(newOutText.getText().length() != 0){
+                ArrayList<String> path = new ArrayList<>(Arrays.asList(newOutText.getText().toString().split("/")));
+                String outName = path.get(path.size()-1);
+                path.remove(path.size()-1);
+                Out o = new Out(outName, path);
+                if(!((DeviceTypes)type.getSelectedItem()).outs.contains(o)) {
+                    CheckBox cb = new CheckBox(newOut.getContext());
+                    cb.setOnCheckedChangeListener((compoundButton, b2) -> {
+                        if (b2)
+                            outs.add(o);
+                        else {
+                            outs.remove(o);
+                            customOuts.remove(o);
+                            outsLayout.removeView(cb);
+                            outsLayout.setVisibility(outsLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
+                        }
+                    });
+                    cb.setChecked(true);
+                    cb.setText(o.getName());
+                    outsLayout.setVisibility(View.VISIBLE);
+                    customOuts.add(o);
+                    outsLayout.addView(cb);
+                }
+                newOutText.setText("");
+                newOutText.clearFocus();
+                InputMethodManager imm= (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(newOutText.getWindowToken(), 0);
+            }
+        };
+        newOutText.setOnFocusChangeListener((view1, b) -> {
+            if(!b){
+                addOut.run();
+            }
+        });
+        newOutText.setOnEditorActionListener((textView, i12, keyEvent) -> {
+            if (EditorInfo.IME_ACTION_DONE == i12) {
+                addOut.run();
+            }
+            return false;
+        });
+
+        asd2.addView(type);
         type.setAdapter(typeAdapter);
         type.setPrompt(getResources().getString(R.string.device));
+
         type.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            DeviceTypes selected = null;
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 DeviceTypes devices = (DeviceTypes) type.getSelectedItem();
@@ -265,12 +398,12 @@ public class ListActivity extends AppCompatActivity {
                 outs.clear();
                 relays.clear();
 
-                List<Out> outs1 = new ArrayList<>(outs);
-                if(selected != null) outs1.removeAll(selected.outs);
+                List<Out> outs1 = new ArrayList<>(customOuts);
+                outs1.removeAll(devices.outs);
                 outs1.addAll(devices.outs);
 
-                List<Out> relays1 = new ArrayList<>();
-                if(selected != null) relays1.removeAll(selected.relays);
+                List<Out> relays1 = new ArrayList<>(customRelays);
+                relays1.removeAll(devices.relays);
                 relays1.addAll(devices.relays);
 
                 for(Out o : outs1){
@@ -280,13 +413,14 @@ public class ListActivity extends AppCompatActivity {
                             outs.add(o);
                         else{
                             outs.remove(o);
+                            customOuts.remove(o);
                             if(!devices.outs.contains(o)) {
                                 outsLayout.removeView(cb);
                                 outsLayout.setVisibility(outsLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
                             }
                         }
                     });
-                    cb.setChecked(!editing || device.getOuts().contains(o) || (device.getType() != devices.id));
+                    cb.setChecked(!editing || customOuts.contains(o) || device.getOuts().contains(o) || device.getType() != devices.id);
                     cb.setText(o.getName());
                     outsLayout.addView(cb);
                 }
@@ -298,21 +432,20 @@ public class ListActivity extends AppCompatActivity {
                             relays.add(o);
                         else{
                             relays.remove(o);
+                            customRelays.remove(o);
                             if(!devices.relays.contains(o)) {
                                 relaysLayout.removeView(cb);
                                 relaysLayout.setVisibility(relaysLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
                             }
                         }
                     });
-                    cb.setChecked(!editing || device.getRelays().contains(o) || (device.getType() != devices.id));
+                    cb.setChecked(!editing || customRelays.contains(o) || device.getRelays().contains(o) || (device.getType() != devices.id));
                     cb.setText(o.getName());
                     relaysLayout.addView(cb);
                 }
 
                 outsLayout.setVisibility(outsLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
                 relaysLayout.setVisibility(relaysLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
-
-                selected = devices;
             }
 
             @Override

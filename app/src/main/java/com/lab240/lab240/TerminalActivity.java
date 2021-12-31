@@ -31,15 +31,14 @@ import com.lab240.lab240.adapters.ItemHolder;
 import com.lab240.lab240.adapters.TerminalAdapter;
 import com.lab240.lab240.adapters.TerminalItemAdapter;
 import com.lab240.utils.AlertSheetDialog;
-import com.lab240.utils.Lab240;
-import com.lab240.utils.MQTT;
+import com.lab240.devices.Lab240;
+import com.lab240.devices.MQTT;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;

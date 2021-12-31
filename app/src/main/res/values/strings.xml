@@ -28,4 +28,6 @@
     <string name="add">Добавить</string>
     <string name="bars">Панели</string>
     <string name="unknown">Неизвестный</string>
+    <string name="new_relay_placeholder">relayPath</string>
+    <string name="new_out_placeholder">outPath</string>
 </resources>

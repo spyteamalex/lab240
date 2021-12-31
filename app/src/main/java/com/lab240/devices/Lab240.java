@@ -1,4 +1,4 @@
-package com.lab240.utils;
+package com.lab240.devices;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -11,17 +11,13 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
-import com.lab240.devices.Device;
-import com.lab240.devices.DeviceTypes;
-import com.lab240.devices.Out;
-import com.lab240.devices.OutLine;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -123,6 +119,14 @@ public class Lab240 {
         edit.apply();
     }
 
+    public static void saveDeviceTypes(Context c, Map<Long, DeviceTypes> deviceTypes){
+        Log.i("call", "Save device types in Lab240");
+        SharedPreferences sp = c.getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
+        SharedPreferences.Editor edit = sp.edit();
+        edit.putString(DEVICE_TYPES, serializeDeviceTypes(deviceTypes));
+        edit.apply();
+    }
+
     public static void saveHiddenGroups(Context c, Set<String> groups){
         Log.i("call", "Save devices in Lab240");
         SharedPreferences sp = c.getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
@@ -153,7 +157,7 @@ public class Lab240 {
         for(Map.Entry<Long, DeviceTypes> t : types.entrySet()){
             long key = -1;
             for(Map.Entry<Long, DeviceTypes> p : Lab240.deviceTypes.entrySet()){
-                if(Comparator.equals(Lab240.deviceTypes.get(p.getKey()), t.getValue())) {
+                if(Objects.equals(Lab240.deviceTypes.get(p.getKey()), t.getValue())) {
                     key = p.getKey();
                     break;
                 }
@@ -228,11 +232,10 @@ public class Lab240 {
         StringBuilder sb = new StringBuilder();
         sb.append("/").append(mqtt.getName());
         sb.append("/").append(d.getIdentificator());
-        for(String s : o.getPath())
+        for (String s : o.getPath())
             sb.append("/").append(s);
         sb.append("/").append(o.getName());
         return sb.toString();
-
     }
 
     public static Map<Long, DeviceTypes> getDeviceTypes() {
