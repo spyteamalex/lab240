@@ -1,6 +1,8 @@
 package com.lab240.lab240;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -9,7 +11,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.google.common.base.Optional;
 import com.lab240.devices.Device;
@@ -58,6 +64,25 @@ public class LoginActivity extends AppCompatActivity {
     }
 
 
+    private final static int PERMISSION_REQUEST_CODE = 101;
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if(requestCode == PERMISSION_REQUEST_CODE && grantResults.length > 0){
+            boolean f = true;
+            for(int i : grantResults){
+                f = f && i == PackageManager.PERMISSION_GRANTED;
+            }
+            if(f) {
+                Intent i = new Intent(LoginActivity.this, ListActivity.class);
+                startActivity(i);
+                finish();
+            }
+        }
+    }
+
     protected void next(View v){
         Log.i("call", "Next in LoginActivity");
         check(name.getText().toString(), pass.getText().toString(), new ArrayList<>(), new TreeSet<>(), Lab240.DEFAULT_TYPES, true);
@@ -77,9 +102,19 @@ public class LoginActivity extends AppCompatActivity {
                 Lab240.setConfig(mqtt, c);
 
                 Lab240.saveConfig(LoginActivity.this, c);
-                Intent i = new Intent(LoginActivity.this, ListActivity.class);
-                startActivity(i);
-                finish();
+
+                if (ContextCompat.checkSelfPermission(LoginActivity.this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED) {
+
+                    ActivityCompat.requestPermissions(LoginActivity.this,
+                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                            PERMISSION_REQUEST_CODE);
+                }else {
+                    Intent i = new Intent(LoginActivity.this, ListActivity.class);
+                    startActivity(i);
+                    finish();
+                }
             }
 
             @Override

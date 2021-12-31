@@ -1,9 +1,11 @@
 package com.lab240.lab240;
 
 import android.app.Activity;
+import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -22,6 +24,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -49,6 +52,18 @@ import com.lab240.utils.ShowableAdapter;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -86,6 +101,33 @@ public class ListActivity extends AppCompatActivity {
                         }
                     }
                     Lab240.saveDevices(this, Lab240.getDevices());
+                }
+            });
+
+    ActivityResultLauncher<Intent> filePicker = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if(result.getData() != null) {
+                    Log.i("info", "File is picked");
+                    StringBuilder sb = new StringBuilder();
+                    try (BufferedReader inputStream = new BufferedReader(new InputStreamReader(getContentResolver().openInputStream(result.getData().getData())))){
+                        int c;
+                        while ((c = inputStream.read()) != -1) {
+                            sb.append((char) c);
+                        }
+
+                    } catch (IOException e) {
+                        Toast.makeText(this, R.string.import_error, Toast.LENGTH_LONG).show();
+                        e.printStackTrace();
+                    }
+                    Pair<List<Device>, Map<Long, DeviceTypes>> res = Lab240.fromDeviceConfig(sb.toString());
+                    Lab240.getDeviceTypes().putAll(res.second);
+                    Lab240.getDevices().addAll(res.first);
+                    Lab240.saveDevices(ListActivity.this, Lab240.getDevices());
+                    Lab240.saveDeviceTypes(ListActivity.this, Lab240.getDeviceTypes());
+                    update();
+                }else{
+                    Log.i("info", "File is not picked");
                 }
             });
 
@@ -187,26 +229,38 @@ public class ListActivity extends AppCompatActivity {
         }else if(item.getItemId() == R.id.export){
             Log.i("action", "Export in ListActivity");
 
-            //todo change
-            System.out.println(Lab240.toDeviceConfig(Lab240.getDevices(), Lab240.getDeviceTypes()));
+            File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Config.lab240");
+            for (int i = 1; f.exists(); i++){
+                f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Config("+i+").lab240");
+            }
+            try {
+                //todo разобраться с уведомлениями
+                f.createNewFile();
+                try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f)))) {
+                    out.write(Lab240.toDeviceConfig(Lab240.getDevices(), Lab240.getDeviceTypes()));
+                }
+                ((DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE)).addCompletedDownload(f.getName(),f.getName(),true,"application/json", f.getAbsolutePath(), f.length(),true);
+            } catch (IOException e) {
+                e.printStackTrace();
+                Toast.makeText(this, R.string.export_error, Toast.LENGTH_LONG).show();
+            }
+
         }else if(item.getItemId() == R.id.imprt){
             Log.i("action", "Export in ListActivity");
 
-            //todo change
-            Pair<List<Device>, Map<Long, DeviceTypes>> res = Lab240.fromDeviceConfig("{\"Devices\":[{\"consoleLasts\":[],\"group\":\"uh\",\"id\":1639946833682,\"identificator\":\"lab\",\"name\":\"test\",\"outs\":[{\"name\":\"current\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"strong_sec\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"temp_in\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"time_up\",\"path\":[\"out\"]}],\"relays\":[{\"name\":\"r1\",\"path\":[\"out\",\"relays\"]},{\"name\":\"r2\",\"path\":[\"out\",\"relays\"]}],\"type\":4}],\"Device Types\":{\"0\":{\"getterHints\":[],\"id\":0,\"name\":\"Устройство\",\"outs\":[],\"relays\":[],\"setterHints\":[]},\"1\":{\"getterHints\":[\"aofs\",\"a2ofs\"],\"id\":1,\"name\":\"Контроль станции\",\"outs\":[{\"name\":\"current\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"strong_sec\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"temp_in\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"temp_out\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"time_up\",\"path\":[\"out\"]}],\"relays\":[{\"name\":\"r1\",\"path\":[\"out\",\"relays\"]}],\"setterHints\":[\"tlevels\",\"tls\"]},\"2\":{\"getterHints\":[\"aofs\",\"a2ofs\"],\"id\":2,\"name\":\"Термостат\",\"outs\":[{\"name\":\"temp_in\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"temp_out\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"time_up\",\"path\":[\"out\"]}],\"relays\":[{\"name\":\"r1\",\"path\":[\"out\",\"relays\"]}],\"setterHints\":[\"tlevels\",\"tls\"]},\"3\":{\"getterHints\":[\"aofs\",\"a2ofs\"],\"id\":3,\"name\":\"Розетка с таймером\",\"outs\":[{\"name\":\"temp_in\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"time_up\",\"path\":[\"out\"]}],\"relays\":[{\"name\":\"r1\",\"path\":[\"out\",\"relays\"]},{\"name\":\"r2\",\"path\":[\"out\",\"relays\"]}],\"setterHints\":[\"tlevels\",\"tls\"]},\"4\":{\"getterHints\":[\"aofs\",\"a2ofs\"],\"id\":4,\"name\":\"Розетка с контролем тока\",\"outs\":[{\"name\":\"current\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"strong_sec\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"temp_in\",\"path\":[\"out\",\"sensors\"]},{\"name\":\"time_up\",\"path\":[\"out\"]}],\"relays\":[{\"name\":\"r1\",\"path\":[\"out\",\"relays\"]},{\"name\":\"r2\",\"path\":[\"out\",\"relays\"]}],\"setterHints\":[\"tlevels\",\"tls\"]}}}");
-            Lab240.getDeviceTypes().putAll(res.second);
-            Lab240.getDevices().addAll(res.first);
-            Lab240.saveDevices(ListActivity.this, Lab240.getDevices());
-            Lab240.saveDeviceTypes(ListActivity.this, Lab240.getDeviceTypes());
-            update();
+            Intent chooseFile = new Intent(Intent.ACTION_GET_CONTENT);
+            chooseFile.addCategory(Intent.CATEGORY_OPENABLE);
+            chooseFile.setType("application/json");
+            Intent intent = Intent.createChooser(chooseFile, getString(R.string.choose_config));
+            filePicker.launch(intent);
         }
         return super.onOptionsItemSelected(item);
     }
-
     public void editDevice(){
         editDevice(null);
     }
 
+    //todo подчистить, добавить комментарии
     public void editDevice(@Nullable Device device){
         Log.i("action", "Editing device (New = "+(device == null)+") in ListActivity");
         final boolean editing = device != null;

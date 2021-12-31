@@ -5,6 +5,7 @@ import com.lab240.utils.Showable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -12,73 +13,24 @@ import java.util.TreeSet;
 
 public class DeviceTypes implements Showable {
     public static final DeviceTypes EMPTY = new DeviceTypes("Устройство", 0);
-
-    //todo delete
-    public static DeviceTypes[] DEFAULT_TYPES = new DeviceTypes[]{new DeviceTypes("Выравниватель температуры", 0,
-            new Out[]{
-                    new Out("r1", "out", "relays"),
-                    new Out("r2", "out", "relays")
-            },
-            new Out[]{
-                    new Out("temp_in", "out", "sensors"),
-                    new Out("temp_out", "out", "sensors"),
-                    new Out("temp_odd", "out", "sensors"),
-                    new Out("time_up", "out")
-            },
-            Hints.DEFAULT_SETTER_HINTS,
-            Hints.DEFAULT_GETTER_HINTS),
-            new DeviceTypes("Контроль станции", 1,
-                    new Out[]{
-                            new Out("r1", "out", "relays")
-                    },
-                    new Out[]{
-                            new Out("temp_in", "out", "sensors"),
-                            new Out("temp_out", "out", "sensors"),
-                            new Out("current", "out", "sensors"),
-                            new Out("strong_sec", "out", "sensors"),
-                            new Out("time_up", "out")
-                    },
-                    Hints.DEFAULT_SETTER_HINTS,
-                    Hints.DEFAULT_GETTER_HINTS),
-            new DeviceTypes("Термостат", 2,
-                    new Out[]{
-                            new Out("r1", "out", "relays")
-                    },
-                    new Out[]{
-                            new Out("temp_in", "out", "sensors"),
-                            new Out("temp_out", "out", "sensors"),
-                            new Out("time_up", "out")
-                    },
-                    Hints.DEFAULT_SETTER_HINTS,
-                    Hints.DEFAULT_GETTER_HINTS),
-            new DeviceTypes("Розетка с таймером", 3,
-                    new Out[]{
-                            new Out("r1", "out", "relays"),
-                            new Out("r2", "out", "relays")
-                    },
-                    new Out[]{
-                            new Out("temp_in", "out", "sensors"),
-                            new Out("time_up", "out")
-                    },
-                    Hints.DEFAULT_SETTER_HINTS,
-                    Hints.DEFAULT_GETTER_HINTS),
-            new DeviceTypes("Розетка с контролем тока", 4,
-                    new Out[]{
-                            new Out("r1", "out", "relays"),
-                            new Out("r2", "out", "relays")
-                    },
-                    new Out[]{
-                            new Out("temp_in", "out", "sensors"),
-                            new Out("current", "out", "sensors"),
-                            new Out("strong_sec", "out", "sensors"),
-                            new Out("time_up", "out")
-                    },
-                    Hints.DEFAULT_SETTER_HINTS,
-                    Hints.DEFAULT_GETTER_HINTS),
-//            new DeviceTypes("Контроль станции и термостат", 5,
+//
+//    //todo delete
+//    public static DeviceTypes[] DEFAULT_TYPES = new DeviceTypes[]{new DeviceTypes("Выравниватель температуры", 0,
+//            new Out[]{
+//                    new Out("r1", "out", "relays"),
+//                    new Out("r2", "out", "relays")
+//            },
+//            new Out[]{
+//                    new Out("temp_in", "out", "sensors"),
+//                    new Out("temp_out", "out", "sensors"),
+//                    new Out("temp_odd", "out", "sensors"),
+//                    new Out("time_up", "out")
+//            },
+//            Hints.DEFAULT_SETTER_HINTS,
+//            Hints.DEFAULT_GETTER_HINTS),
+//            new DeviceTypes("Контроль станции", 1,
 //                    new Out[]{
-//                            new Out("r1", "out", "relays"),
-//                            new Out("r2", "out", "relays")
+//                            new Out("r1", "out", "relays")
 //                    },
 //                    new Out[]{
 //                            new Out("temp_in", "out", "sensors"),
@@ -89,21 +41,9 @@ public class DeviceTypes implements Showable {
 //                    },
 //                    Hints.DEFAULT_SETTER_HINTS,
 //                    Hints.DEFAULT_GETTER_HINTS),
-//            new DeviceTypes("Подсветка и полив", 6,
+//            new DeviceTypes("Термостат", 2,
 //                    new Out[]{
-//                            new Out("r1", "out", "relays"),
-//                            new Out("r2", "out", "relays")
-//                    },
-//                    new Out[]{
-//                            new Out("temp_in", "out", "sensors"),
-//                            new Out("time_up", "out")
-//                    },
-//                    Hints.DEFAULT_SETTER_HINTS,
-//                    Hints.DEFAULT_GETTER_HINTS),
-//            new DeviceTypes("Термостат с розеткой", 7,
-//                    new Out[]{
-//                            new Out("r1", "out", "relays"),
-//                            new Out("r2", "out", "relays")
+//                            new Out("r1", "out", "relays")
 //                    },
 //                    new Out[]{
 //                            new Out("temp_in", "out", "sensors"),
@@ -112,44 +52,105 @@ public class DeviceTypes implements Showable {
 //                    },
 //                    Hints.DEFAULT_SETTER_HINTS,
 //                    Hints.DEFAULT_GETTER_HINTS),
-//            new DeviceTypes("Контроль тока(1 фаза) на sct013", 8,
-//                    new Out[]{},
+//            new DeviceTypes("Розетка с таймером", 3,
 //                    new Out[]{
-//                            new Out("sct013_1", "out", "sensors"),
+//                            new Out("r1", "out", "relays"),
+//                            new Out("r2", "out", "relays")
+//                    },
+//                    new Out[]{
+//                            new Out("temp_in", "out", "sensors"),
 //                            new Out("time_up", "out")
 //                    },
 //                    Hints.DEFAULT_SETTER_HINTS,
 //                    Hints.DEFAULT_GETTER_HINTS),
-//            new DeviceTypes("Контроль тока(3 фазы) на sct013", 9,
-//                    new Out[]{},
+//            new DeviceTypes("Розетка с контролем тока", 4,
 //                    new Out[]{
-//                            new Out("sct013_1", "out", "sensors"),
-//                            new Out("sct013_2", "out", "sensors"),
-//                            new Out("sct013_3", "out", "sensors"),
-//                            new Out("sct013x3", "out", "sensors"),
+//                            new Out("r1", "out", "relays"),
+//                            new Out("r2", "out", "relays")
+//                    },
+//                    new Out[]{
+//                            new Out("temp_in", "out", "sensors"),
+//                            new Out("current", "out", "sensors"),
+//                            new Out("strong_sec", "out", "sensors"),
 //                            new Out("time_up", "out")
 //                    },
 //                    Hints.DEFAULT_SETTER_HINTS,
 //                    Hints.DEFAULT_GETTER_HINTS),
-//            new DeviceTypes("Контроль тока(1 фаза) на pzem004", 10,
-//                    new Out[]{},
-//                    new Out[]{
-//                            new Out("pzem_current", "out", "sensors"),
-//                            new Out("pzem_voltage", "out", "sensors"),
-//                            new Out("pzem_energy", "out", "sensors"),
-//                            new Out("pzem_power", "out", "sensors"),
-//                            new Out("pzem004", "out", "sensors"),
-//                            new Out("time_up", "out")
-//                    },
-//                    Hints.DEFAULT_SETTER_HINTS,
-//                    Hints.DEFAULT_GETTER_HINTS)
-    };
+////            new DeviceTypes("Контроль станции и термостат", 5,
+////                    new Out[]{
+////                            new Out("r1", "out", "relays"),
+////                            new Out("r2", "out", "relays")
+////                    },
+////                    new Out[]{
+////                            new Out("temp_in", "out", "sensors"),
+////                            new Out("temp_out", "out", "sensors"),
+////                            new Out("current", "out", "sensors"),
+////                            new Out("strong_sec", "out", "sensors"),
+////                            new Out("time_up", "out")
+////                    },
+////                    Hints.DEFAULT_SETTER_HINTS,
+////                    Hints.DEFAULT_GETTER_HINTS),
+////            new DeviceTypes("Подсветка и полив", 6,
+////                    new Out[]{
+////                            new Out("r1", "out", "relays"),
+////                            new Out("r2", "out", "relays")
+////                    },
+////                    new Out[]{
+////                            new Out("temp_in", "out", "sensors"),
+////                            new Out("time_up", "out")
+////                    },
+////                    Hints.DEFAULT_SETTER_HINTS,
+////                    Hints.DEFAULT_GETTER_HINTS),
+////            new DeviceTypes("Термостат с розеткой", 7,
+////                    new Out[]{
+////                            new Out("r1", "out", "relays"),
+////                            new Out("r2", "out", "relays")
+////                    },
+////                    new Out[]{
+////                            new Out("temp_in", "out", "sensors"),
+////                            new Out("temp_out", "out", "sensors"),
+////                            new Out("time_up", "out")
+////                    },
+////                    Hints.DEFAULT_SETTER_HINTS,
+////                    Hints.DEFAULT_GETTER_HINTS),
+////            new DeviceTypes("Контроль тока(1 фаза) на sct013", 8,
+////                    new Out[]{},
+////                    new Out[]{
+////                            new Out("sct013_1", "out", "sensors"),
+////                            new Out("time_up", "out")
+////                    },
+////                    Hints.DEFAULT_SETTER_HINTS,
+////                    Hints.DEFAULT_GETTER_HINTS),
+////            new DeviceTypes("Контроль тока(3 фазы) на sct013", 9,
+////                    new Out[]{},
+////                    new Out[]{
+////                            new Out("sct013_1", "out", "sensors"),
+////                            new Out("sct013_2", "out", "sensors"),
+////                            new Out("sct013_3", "out", "sensors"),
+////                            new Out("sct013x3", "out", "sensors"),
+////                            new Out("time_up", "out")
+////                    },
+////                    Hints.DEFAULT_SETTER_HINTS,
+////                    Hints.DEFAULT_GETTER_HINTS),
+////            new DeviceTypes("Контроль тока(1 фаза) на pzem004", 10,
+////                    new Out[]{},
+////                    new Out[]{
+////                            new Out("pzem_current", "out", "sensors"),
+////                            new Out("pzem_voltage", "out", "sensors"),
+////                            new Out("pzem_energy", "out", "sensors"),
+////                            new Out("pzem_power", "out", "sensors"),
+////                            new Out("pzem004", "out", "sensors"),
+////                            new Out("time_up", "out")
+////                    },
+////                    Hints.DEFAULT_SETTER_HINTS,
+////                    Hints.DEFAULT_GETTER_HINTS)
+//    };
 
-    public Set<Out> outs, relays;
-    public String name;
-    public long id;
-    public List<String> setterHints;
-    public List<String> getterHints;
+    public final Set<Out> outs, relays;
+    public final String name;
+    public final long id;
+    public final List<String> setterHints;
+    public final List<String> getterHints;
     public static final Out mainIn = new Out("params", "in");
     public static final Out mainOut = new Out("info", "out");
     public static final Out log = new Out("log", "out");

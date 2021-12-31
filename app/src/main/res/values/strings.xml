@@ -30,4 +30,7 @@
     <string name="unknown">Неизвестный</string>
     <string name="new_relay_placeholder">relayPath</string>
     <string name="new_out_placeholder">outPath</string>
+    <string name="export_error">Возникла ошибка при попытке экспортировать даные</string>
+    <string name="import_error">Возникла ошибка при попытке импортировать даные</string>
+    <string name="choose_config">Выберите файл конфигурации</string>
 </resources>

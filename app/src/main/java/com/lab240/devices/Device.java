@@ -11,16 +11,16 @@ public class Device {
     private String identificator;       //Техническое имя устойства
     private String name;
     private String group;
-    private final long id;      //Уникальный номер
+    private final long id ;      //Уникальный номер
+    private long type;
+    private final Set<Out> outs = new TreeSet<>();
+    private final Set<Out> relays = new TreeSet<>();
 
     public Device setType(long type) {
         this.type = type;
         return this;
     }
 
-    private long type;
-    private final Set<Out> outs = new TreeSet<>();
-    private final Set<Out> relays = new TreeSet<>();
 
     public List<OutLine> getConsoleLasts() {
         return consoleLasts;

@@ -5,12 +5,20 @@ import android.content.SharedPreferences;
 import android.util.Log;
 import android.util.Pair;
 
+import androidx.recyclerview.widget.ListAdapter;
+
 import com.google.common.base.Optional;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.lab240.utils.DeviceAdapter;
+import com.lab240.utils.DeviceListAdapter;
+import com.lab240.utils.DeviceTypeAdapter;
+import com.lab240.utils.DeviceTypeMapAdapter;
+import com.lab240.utils.OutAdapter;
+import com.lab240.utils.OutSetAdapter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,7 +37,14 @@ public class Lab240 {
     private static final List<Device> devices = new ArrayList<>();
     private static final Map<Long, DeviceTypes> deviceTypes = new HashMap<>();
     private static final Set<String> hiddenGroups = new HashSet<>();
-    private static final Gson gson = new GsonBuilder().create();
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(Device.class, new DeviceAdapter())
+            .registerTypeAdapter(DeviceTypes.class, new DeviceTypeAdapter())
+            .registerTypeAdapter(Out.class, new OutAdapter())
+            .registerTypeAdapter(new TypeToken<List<Device>>(){}.getType(), new DeviceListAdapter())
+            .registerTypeAdapter(new TypeToken<Map<Long, DeviceTypes>>(){}.getType(), new DeviceTypeMapAdapter())
+            .registerTypeAdapter(new TypeToken<Set<Out>>(){}.getType(), new OutSetAdapter())
+            .create();
 
 
     public static final Map<Long, DeviceTypes> DEFAULT_TYPES = new TreeMap<>();
@@ -175,7 +190,7 @@ public class Lab240 {
         Map<Long, DeviceTypes> types2 = new HashMap<>();
         List<Device> devices2 = new ArrayList<>();
         for(Device d : devices){
-            Device d2 = new Device(d.getName(), d.getIdentificator(), d.getGroup(), System.currentTimeMillis(), toReplace.get(d.getType()), d.getRelays(), d.getOuts());
+            Device d2 = new Device(d.getName(), d.getIdentificator(), d.getGroup(), d.getId(), toReplace.get(d.getType()), d.getRelays(), d.getOuts());
             devices2.add(d2);
         }
         for(Map.Entry<Long, DeviceTypes> t : types.entrySet()){
