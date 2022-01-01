@@ -38,6 +38,11 @@ public class GroupHolder extends RecyclerView.ViewHolder{
         name = itemView.findViewById(R.id.name);
 
         itemView.setOnClickListener(view ->{
+            if(!itemView.hasWindowFocus() || !itemView.isClickable()) {
+                Log.i("info", "Cancel click on GroupHolder");
+                return;
+            }
+            itemView.setClickable(false);
             if(!Lab240.getHiddenGroups().contains(group)) {
                 Log.i("action", "Hide GroupHolder");
                 Lab240.getHiddenGroups().add(group);
@@ -48,9 +53,16 @@ public class GroupHolder extends RecyclerView.ViewHolder{
                 setVisible(true);
             }
             Lab240.saveHiddenGroups(devices.getContext(), Lab240.getHiddenGroups());
+            itemView.setClickable(true);
         });
         itemView.setOnLongClickListener(view -> {
             Log.i("action", "Call context menu in GroupHolder");
+            if(!itemView.isClickable() || !itemView.hasWindowFocus()) {
+                Log.i("info", "Cancel calling context menu in GroupHolder");
+                return false;
+            }
+            itemView.setClickable(false);
+
             Vibrator v = (Vibrator) view.getContext().getSystemService(Context.VIBRATOR_SERVICE);
             v.vibrate(25);
             AlertSheetDialog asd = new AlertSheetDialog(itemView.getContext());
@@ -67,6 +79,7 @@ public class GroupHolder extends RecyclerView.ViewHolder{
                 Log.i("action", "Delete group in GroupHolder");
                 tc.delete(adapter.devices);
             }, AlertSheetDialog.ButtonType.DESTROY);
+            asd.setDismissAction(()->itemView.setClickable(true));
             asd.show(fm, "");
             return false;
         });

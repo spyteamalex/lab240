@@ -12,6 +12,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import com.lab240.utils.DeviceAdapter;
 import com.lab240.utils.DeviceListAdapter;
@@ -21,6 +22,7 @@ import com.lab240.utils.OutAdapter;
 import com.lab240.utils.OutSetAdapter;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -159,45 +161,51 @@ public class Lab240 {
     }
 
     public static Pair<List<Device>, Map<Long, DeviceTypes>> fromDeviceConfig(String string){
-        JsonObject jo = gson.fromJson(string, JsonObject.class);
-        Map<Long, DeviceTypes> types = gson.fromJson(jo.get(DEVICE_TYPES), new TypeToken<Map<Long, DeviceTypes>>(){}.getType());
-        List<Device> devices = gson.fromJson(jo.get(DEVICES), new TypeToken<List<Device>>(){}.getType());
-        for(Device d : devices){
-            if(!types.containsKey(d.getType()))
-                d.setType(DeviceTypes.EMPTY.id);
-        }
-        Map<Long, Long> toReplace = new TreeMap<>();
-        long i = 0;
-        toReplace.put(DeviceTypes.EMPTY.id, DeviceTypes.EMPTY.id);
-        for(Map.Entry<Long, DeviceTypes> t : types.entrySet()){
-            long key = -1;
-            for(Map.Entry<Long, DeviceTypes> p : Lab240.deviceTypes.entrySet()){
-                if(Objects.equals(Lab240.deviceTypes.get(p.getKey()), t.getValue())) {
-                    key = p.getKey();
-                    break;
-                }
+        try {
+            JsonObject jo = gson.fromJson(string, JsonObject.class);
+            Map<Long, DeviceTypes> types = gson.fromJson(jo.get(DEVICE_TYPES), new TypeToken<Map<Long, DeviceTypes>>() {
+            }.getType());
+            List<Device> devices = gson.fromJson(jo.get(DEVICES), new TypeToken<List<Device>>() {
+            }.getType());
+            for (Device d : devices) {
+                if (!types.containsKey(d.getType()))
+                    d.setType(DeviceTypes.EMPTY.id);
             }
-            if(key == -1){
-                if(!Lab240.deviceTypes.containsKey(t.getKey())) {
-                    toReplace.put(t.getKey(), t.getKey());
-                    continue;
+            Map<Long, Long> toReplace = new TreeMap<>();
+            long i = 0;
+            toReplace.put(DeviceTypes.EMPTY.id, DeviceTypes.EMPTY.id);
+            for (Map.Entry<Long, DeviceTypes> t : types.entrySet()) {
+                long key = -1;
+                for (Map.Entry<Long, DeviceTypes> p : Lab240.deviceTypes.entrySet()) {
+                    if (Objects.equals(Lab240.deviceTypes.get(p.getKey()), t.getValue())) {
+                        key = p.getKey();
+                        break;
+                    }
                 }
-                for(i++; types.containsKey(i) || Lab240.deviceTypes.containsKey(i); i++);
-                key = i;
+                if (key == -1) {
+                    if (!Lab240.deviceTypes.containsKey(t.getKey())) {
+                        toReplace.put(t.getKey(), t.getKey());
+                        continue;
+                    }
+                    for (i++; types.containsKey(i) || Lab240.deviceTypes.containsKey(i); i++) ;
+                    key = i;
+                }
+                toReplace.put(t.getKey(), key);
             }
-            toReplace.put(t.getKey(),key);
+            Map<Long, DeviceTypes> types2 = new HashMap<>();
+            List<Device> devices2 = new ArrayList<>();
+            for (Device d : devices) {
+                Device d2 = new Device(d.getName(), d.getIdentificator(), d.getGroup(), d.getId(), toReplace.get(d.getType()), d.getRelays(), d.getOuts());
+                devices2.add(d2);
+            }
+            for (Map.Entry<Long, DeviceTypes> t : types.entrySet()) {
+                DeviceTypes dt = t.getValue();
+                types2.put(t.getValue().id, new DeviceTypes(dt.name, toReplace.get(t.getKey()), dt.relays, dt.outs, dt.setterHints, dt.getterHints));
+            }
+            return Pair.create(devices2, types2);
+        }catch (JsonSyntaxException e){
+            return Pair.create(Collections.emptyList(), Collections.emptyMap());
         }
-        Map<Long, DeviceTypes> types2 = new HashMap<>();
-        List<Device> devices2 = new ArrayList<>();
-        for(Device d : devices){
-            Device d2 = new Device(d.getName(), d.getIdentificator(), d.getGroup(), d.getId(), toReplace.get(d.getType()), d.getRelays(), d.getOuts());
-            devices2.add(d2);
-        }
-        for(Map.Entry<Long, DeviceTypes> t : types.entrySet()){
-            DeviceTypes dt = t.getValue();
-            types2.put(t.getValue().id, new DeviceTypes(dt.name, toReplace.get(t.getKey()), dt.relays, dt.outs, dt.setterHints, dt.getterHints));
-        }
-        return Pair.create(devices2,types2);
     }
 
     public static String toDeviceConfig(List<Device> devices, Map<Long, DeviceTypes> deviceTypes){

@@ -49,6 +49,6 @@ public class DeviceAdapter implements JsonSerializer<Device>, JsonDeserializer<D
         jo.addProperty(TYPE, src.getType());
         jo.add(OUTS, context.serialize(src.getOuts(), new TypeToken<Set<Out>>(){}.getType()));
         jo.add(RELAYS, context.serialize(src.getRelays(), new TypeToken<Set<Out>>(){}.getType()));
-        return null;
+        return jo;
     }
 }

@@ -37,6 +37,6 @@ public class DeviceTypeMapAdapter implements JsonSerializer<Map<Long, DeviceType
         for (Map.Entry<Long, DeviceTypes> i : src.entrySet()) {
             jo.add(context.serialize(i.getKey()).toString(), context.serialize(i.getValue()));
         }
-        return null;
+        return jo;
     }
 }

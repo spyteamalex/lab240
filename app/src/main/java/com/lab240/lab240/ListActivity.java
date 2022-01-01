@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.text.Editable;
@@ -52,18 +53,13 @@ import com.lab240.utils.ShowableAdapter;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -83,12 +79,13 @@ public class ListActivity extends AppCompatActivity {
     ActivityResultLauncher<Intent> consoleLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
-                Log.i("info", "Result in ListActivity from terminal = "+result.getData().getDataString());
                 if (result.getResultCode() == Activity.RESULT_OK) {
                     Intent data = result.getData();
                     if(data == null || !data.hasExtra(TerminalActivity.RESULT) || !data.hasExtra(TerminalActivity.ID)) {
-                        Log.i("info", String.format("No data: (data == null: %b, no RESULT: %b, no ID: %b)", data == null,!data.hasExtra(TerminalActivity.RESULT), !data.hasExtra(TerminalActivity.ID)));
+                        Log.i("info", String.format("No data: (data == null: %b, no RESULT: %b, no ID: %b)", data == null,data != null && !data.hasExtra(TerminalActivity.RESULT), data != null && !data.hasExtra(TerminalActivity.ID)));
                         return;
+                    }else{
+                        Log.i("info", "Result in ListActivity from terminal = "+data.getDataString());
                     }
                     long id = data.getLongExtra(TerminalActivity.ID, 0);
                     Gson gson = new GsonBuilder().create();
@@ -109,27 +106,32 @@ public class ListActivity extends AppCompatActivity {
             result -> {
                 if(result.getData() != null) {
                     Log.i("info", "File is picked");
-                    StringBuilder sb = new StringBuilder();
-                    try (BufferedReader inputStream = new BufferedReader(new InputStreamReader(getContentResolver().openInputStream(result.getData().getData())))){
-                        int c;
-                        while ((c = inputStream.read()) != -1) {
-                            sb.append((char) c);
-                        }
-
-                    } catch (IOException e) {
-                        Toast.makeText(this, R.string.import_error, Toast.LENGTH_LONG).show();
-                        e.printStackTrace();
-                    }
-                    Pair<List<Device>, Map<Long, DeviceTypes>> res = Lab240.fromDeviceConfig(sb.toString());
-                    Lab240.getDeviceTypes().putAll(res.second);
-                    Lab240.getDevices().addAll(res.first);
-                    Lab240.saveDevices(ListActivity.this, Lab240.getDevices());
-                    Lab240.saveDeviceTypes(ListActivity.this, Lab240.getDeviceTypes());
-                    update();
+                    openFile(result.getData().getData());
                 }else{
                     Log.i("info", "File is not picked");
                 }
             });
+
+    protected void openFile(Uri uri){
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader inputStream = new BufferedReader(new InputStreamReader(getContentResolver().openInputStream(uri)))){
+            int c;
+            while ((c = inputStream.read()) != -1) {
+                sb.append((char) c);
+            }
+
+        } catch (IOException e) {
+            Toast.makeText(this, R.string.import_error, Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+        }
+        Pair<List<Device>, Map<Long, DeviceTypes>> res = Lab240.fromDeviceConfig(sb.toString());
+        Lab240.getDeviceTypes().putAll(res.second);
+        Lab240.getDevices().addAll(res.first);
+        Lab240.saveDevices(ListActivity.this, Lab240.getDevices());
+        Lab240.saveDeviceTypes(ListActivity.this, Lab240.getDeviceTypes());
+        update();
+        Toast.makeText(this, R.string.import_ok, Toast.LENGTH_LONG).show();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -205,6 +207,12 @@ public class ListActivity extends AppCompatActivity {
         groups.setAdapter(ga);
         update();
         lcc = cause -> handleNoConnection(true);
+
+        Intent i = getIntent();
+        if(Intent.ACTION_VIEW.equals(i.getAction()) && i.getData() != null){
+            Log.i("action", "Opening file from intent");
+            openFile(i.getData());
+        }
     }
 
     public void update(){
@@ -234,12 +242,12 @@ public class ListActivity extends AppCompatActivity {
                 f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Config("+i+").lab240");
             }
             try {
-                //todo разобраться с уведомлениями
                 f.createNewFile();
                 try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f)))) {
                     out.write(Lab240.toDeviceConfig(Lab240.getDevices(), Lab240.getDeviceTypes()));
                 }
                 ((DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE)).addCompletedDownload(f.getName(),f.getName(),true,"application/json", f.getAbsolutePath(), f.length(),true);
+                Toast.makeText(this, getString(R.string.export_ok) + " " + f.getName(), Toast.LENGTH_LONG).show();
             } catch (IOException e) {
                 e.printStackTrace();
                 Toast.makeText(this, R.string.export_error, Toast.LENGTH_LONG).show();
@@ -250,7 +258,7 @@ public class ListActivity extends AppCompatActivity {
 
             Intent chooseFile = new Intent(Intent.ACTION_GET_CONTENT);
             chooseFile.addCategory(Intent.CATEGORY_OPENABLE);
-            chooseFile.setType("application/json");
+            chooseFile.setType("*/*");
             Intent intent = Intent.createChooser(chooseFile, getString(R.string.choose_config));
             filePicker.launch(intent);
         }

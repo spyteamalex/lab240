@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -76,11 +77,18 @@ public class LoginActivity extends AppCompatActivity {
                 f = f && i == PackageManager.PERMISSION_GRANTED;
             }
             if(f) {
-                Intent i = new Intent(LoginActivity.this, ListActivity.class);
-                startActivity(i);
-                finish();
+                changeActivity(ListActivity.class);
             }
         }
+    }
+
+    protected void changeActivity(Class<?> c){
+        Intent i = new Intent(LoginActivity.this, c);
+        i.putExtras(getIntent());
+        i.setData(getIntent().getData());
+        i.setAction(getIntent().getAction());
+        startActivity(i);
+        finish();
     }
 
     protected void next(View v){
@@ -111,9 +119,7 @@ public class LoginActivity extends AppCompatActivity {
                             new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                             PERMISSION_REQUEST_CODE);
                 }else {
-                    Intent i = new Intent(LoginActivity.this, ListActivity.class);
-                    startActivity(i);
-                    finish();
+                    changeActivity(ListActivity.class);
                 }
             }
 
