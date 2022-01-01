@@ -47,6 +47,7 @@ import com.lab240.devices.OutLine;
 import com.lab240.lab240.adapters.DeviceHolder;
 import com.lab240.lab240.adapters.GroupAdapter;
 import com.lab240.utils.AlertSheetDialog;
+import com.lab240.utils.Comparator;
 import com.lab240.utils.GravityArrayAdapter;
 import com.lab240.utils.ShowableAdapter;
 
@@ -63,6 +64,7 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -218,6 +220,11 @@ public class ListActivity extends AppCompatActivity {
     public void update(){
         Log.i("call", "Update ListActivity");
         ga.updateData();
+    }
+
+    public void refresh(){
+        Log.i("call", "Refresh ListActivity");
+        ga.refresh();
     }
 
     @Override
@@ -463,10 +470,12 @@ public class ListActivity extends AppCompatActivity {
                 List<Out> outs1 = new ArrayList<>(customOuts);
                 outs1.removeAll(devices.outs);
                 outs1.addAll(devices.outs);
+                Collections.sort(outs1);
 
                 List<Out> relays1 = new ArrayList<>(customRelays);
                 relays1.removeAll(devices.relays);
                 relays1.addAll(devices.relays);
+                Collections.sort(relays1);
 
                 for(Out o : outs1){
                     CheckBox cb = new CheckBox(view.getContext());
@@ -667,8 +676,8 @@ public class ListActivity extends AppCompatActivity {
         updateTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                Log.i("action", "Auto update in ListActivity");
-                runOnUiThread(ListActivity.this::update);
+                Log.i("action", "Auto refresh in ListActivity");
+                runOnUiThread(ListActivity.this::refresh);
             }
         }, UPDATE_PERIOD, UPDATE_PERIOD);
         if(lcc != null && Lab240.getMqtt() != null)

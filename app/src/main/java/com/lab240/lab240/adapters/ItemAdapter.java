@@ -23,10 +23,12 @@ public class ItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
 
     final Map<Pair<String, Out>, Pair<String, Long>> values;
     final Multimap<Pair<String, Out>, ItemHolder.Updater> updaters;
+    DeviceHolder deviceHolder;
 
-    public ItemAdapter(Multimap<Pair<String, Out>, ItemHolder.Updater> updaters, Map<Pair<String, Out>, Pair<String, Long>> values) {
+    public ItemAdapter(DeviceHolder deviceHolder, Multimap<Pair<String, Out>, ItemHolder.Updater> updaters, Map<Pair<String, Out>, Pair<String, Long>> values) {
         this.values = values;
         this.updaters = updaters;
+        this.deviceHolder = deviceHolder;
     }
 
     private static final int RELAY = 0, ITEM = 1;
@@ -38,6 +40,7 @@ public class ItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
         switch (viewType) {
             case ITEM:
                 ItemHolder itemHolder = new ItemHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_item, parent, false));
+                itemHolder.deviceHolder = deviceHolder;
                 itemHolder.itemView.setOnClickListener(v -> {
                     Log.i("action", "Click in ItemAdapter");
                     parent.callOnClick();
@@ -50,6 +53,7 @@ public class ItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
                 break;
             case RELAY:
                 RelayHolder relayHolder = new RelayHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_relay, parent, false));
+                relayHolder.deviceHolder = deviceHolder;
                 relayHolder.itemView.setOnClickListener(v -> {
                     Log.i("action", "Click in ItemAdapter");
                     parent.callOnClick();

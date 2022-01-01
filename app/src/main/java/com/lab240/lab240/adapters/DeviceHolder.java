@@ -5,6 +5,7 @@ import android.os.Vibrator;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -35,13 +36,15 @@ public class DeviceHolder extends RecyclerView.ViewHolder{
     Device item;
     final ItemAdapter adapter;
     final RecyclerView items;
+    final ProgressBar available;
 
     public DeviceHolder(FragmentManager fm, @NonNull View itemView, Multimap<Pair<String, Out>, ItemHolder.Updater> updaters, Map<Pair<String, Out>, Pair<String, Long>> values, @Nullable Functions tc) {
         super(itemView);
         name = itemView.findViewById(R.id.name);
         type = itemView.findViewById(R.id.type);
         items = itemView.findViewById(R.id.items);
-        adapter = new ItemAdapter(updaters, values);
+        adapter = new ItemAdapter(this, updaters, values);
+        available = itemView.findViewById(R.id.available);
         items.setAdapter(adapter);
 
         itemView.setOnClickListener(view -> {
@@ -82,5 +85,9 @@ public class DeviceHolder extends RecyclerView.ViewHolder{
             asd.show(fm, "");
             return false;
         });
+    }
+
+    public void setAvailable(boolean b){
+        available.setVisibility(b ? View.GONE : View.VISIBLE);
     }
 }

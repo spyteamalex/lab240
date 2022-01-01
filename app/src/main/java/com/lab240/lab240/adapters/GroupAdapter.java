@@ -91,7 +91,7 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder> {
                     values.remove(p);
             }
             devices.put(d.getGroup(), d);
-            if (Lab240.getMqtt() == null || Lab240.getMqtt().isConnected()) {
+            if (Lab240.getMqtt() != null && Lab240.getMqtt().isConnected()) {
                 for (Out o : d.getOuts()) {
                     String path = Lab240.getOutPath(d, o);
                     Lab240.getMqtt().subscribe(path, 0, ListActivity.KEY, new IMqttActionListener() {
@@ -135,6 +135,31 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupHolder> {
         groups.addAll(devices.keySet());
         Collections.sort(groups);
         notifyDataSetChanged();
+    }
+
+    public synchronized void refresh(){
+        for (Device d : Lab240.getDevices()) {
+            for (Out o : d.getOuts()) {
+                Pair<String, Out> p = Pair.create(d.getIdentificator(), o);
+                if (values.containsKey(p) &&
+                        !((System.currentTimeMillis() - values.get(p).second) < MAX_NO_MSG_TIME
+                                && Lab240.getMqtt() != null
+                                && Lab240.getMqtt().isConnected())) {
+                    values.remove(p);
+                    updateValues(p.first, p.second);
+                }
+            }
+            for (Out o : d.getRelays()) {
+                Pair<String, Out> p = Pair.create(d.getIdentificator(), o);
+                if (values.containsKey(p) &&
+                        !((System.currentTimeMillis() - values.get(p).second) < MAX_NO_MSG_TIME
+                                && Lab240.getMqtt() != null
+                                && Lab240.getMqtt().isConnected())) {
+                    values.remove(p);
+                    updateValues(p.first, p.second);
+                }
+            }
+        }
     }
 
     public synchronized void updateValues(String device, Out out) {

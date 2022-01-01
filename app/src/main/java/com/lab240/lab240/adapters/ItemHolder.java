@@ -15,6 +15,7 @@ public class ItemHolder extends RecyclerView.ViewHolder{
 
     public static final String OUT_DEFAULT = "—";
     final TextView topic, value;
+    DeviceHolder deviceHolder;
     Pair<String, Out> p;
     Updater updater;
 
@@ -29,8 +30,10 @@ public class ItemHolder extends RecyclerView.ViewHolder{
     public void update(@Nullable String v){
         if(v == null)
             value.setText(OUT_DEFAULT);
-        else
+        else {
             value.setText(v);
+
+        }
     }
 
     public interface Updater {

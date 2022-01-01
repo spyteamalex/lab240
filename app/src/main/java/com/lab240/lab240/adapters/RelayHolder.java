@@ -18,6 +18,7 @@ public class RelayHolder extends RecyclerView.ViewHolder{
     final ImageView value;
     Pair<String, Out> p;
     ItemHolder.Updater updater;
+    DeviceHolder deviceHolder;
 
     public RelayHolder(@NonNull View itemView) {
         super(itemView);
@@ -29,5 +30,6 @@ public class RelayHolder extends RecyclerView.ViewHolder{
 
     public void update(@Nullable String v){
         value.setImageResource("1".equals(v) ? R.drawable.relay_on_image : R.drawable.relay_off_image);
+        deviceHolder.setAvailable(v != null);
     }
 }

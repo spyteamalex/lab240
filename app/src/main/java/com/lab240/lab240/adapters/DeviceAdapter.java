@@ -46,6 +46,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceHolder>{
     public void onBindViewHolder(@NonNull DeviceHolder holder, int position) {
         Device d = devices.get(position);
         holder.item = d;
+        holder.setAvailable(false);
         holder.name.setText(d.getName());
         holder.type.setText(String.format(Locale.getDefault(), "%s %s", Lab240.getDeviceTypes().get(d.getType()).name, d.getIdentificator()));
         holder.adapter.setData(d.getIdentificator(), d.getRelays(), d.getOuts());
