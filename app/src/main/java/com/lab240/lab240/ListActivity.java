@@ -261,7 +261,7 @@ public class ListActivity extends AppCompatActivity {
             }
 
         }else if(item.getItemId() == R.id.imprt){
-            Log.i("action", "Export in ListActivity");
+            Log.i("action", "Import in ListActivity");
 
             Intent chooseFile = new Intent(Intent.ACTION_GET_CONTENT);
             chooseFile.addCategory(Intent.CATEGORY_OPENABLE);

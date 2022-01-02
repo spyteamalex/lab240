@@ -101,7 +101,7 @@ public class ItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
                 if (values.containsKey(itemP))
                     itemHolder.update(values.get(itemP).first);
                 else
-                    itemHolder.update(ItemHolder.OUT_DEFAULT);
+                    itemHolder.update(null);
                 break;
         }
     }

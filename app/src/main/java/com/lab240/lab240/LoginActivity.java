@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Pair;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -57,7 +58,7 @@ public class LoginActivity extends AppCompatActivity {
         Lab240.Config conf;
         if((conf = config.orNull()) != null){
             Log.i("info", "Autocheck in LoginActivity");
-            check(conf.name, conf.pass, conf.devices, conf.hiddenGroups, conf.deviceTypes,true);
+            check(conf.name, conf.pass, conf.devices, conf.hiddenGroups, conf.deviceTypes,true, false);
         }else{
             loginLayout.setVisibility(View.VISIBLE);
             progressBar.setVisibility(View.GONE);
@@ -93,10 +94,10 @@ public class LoginActivity extends AppCompatActivity {
 
     protected void next(View v){
         Log.i("call", "Next in LoginActivity");
-        check(name.getText().toString(), pass.getText().toString(), new ArrayList<>(), new TreeSet<>(), Lab240.DEFAULT_TYPES, true);
+        check(name.getText().toString(), pass.getText().toString(), new ArrayList<>(), new TreeSet<>(), Lab240.DEFAULT_TYPES, true, true);
     }
 
-    protected void check(String name, String pass, List<Device> devices, Set<String> groups, Map<Long, DeviceTypes> deviceTypes, boolean openFailDialog){
+    protected void check(String name, String pass, List<Device> devices, Set<String> groups, Map<Long, DeviceTypes> deviceTypes, boolean openFailDialog, boolean newAcc){
         Log.i("call", "Check in LoginActivity");
         loginLayout.setVisibility(View.GONE);
         progressBar.setVisibility(View.VISIBLE);
@@ -108,6 +109,11 @@ public class LoginActivity extends AppCompatActivity {
                 Log.i("info", "Successful connection in LoginActivity");
                 Lab240.Config c = new Lab240.Config(name, pass, devices, groups, deviceTypes);
                 Lab240.setConfig(mqtt, c);
+                if(newAcc) {
+                    Pair<List<Device>, Map<Long, DeviceTypes>> listMapPair = Lab240.fromDeviceConfig(getString(R.string.default_config));
+                    Lab240.getDevices().addAll(listMapPair.first);
+                    Lab240.getDeviceTypes().putAll(listMapPair.second);
+                }
 
                 Lab240.saveConfig(LoginActivity.this, c);
 
@@ -133,7 +139,7 @@ public class LoginActivity extends AppCompatActivity {
                     AlertSheetDialog asd = new AlertSheetDialog(LoginActivity.this);
                     asd.setCloseOnAction(false);
                     asd.addText(getResources().getString(R.string.login_fail));
-                    asd.addButton(getResources().getString(R.string.try_again), btn -> check(name, pass, devices, groups, deviceTypes,false), AlertSheetDialog.ButtonType.DEFAULT);
+                    asd.addButton(getResources().getString(R.string.try_again), btn -> check(name, pass, devices, groups, deviceTypes,false, newAcc), AlertSheetDialog.ButtonType.DEFAULT);
                     asd.setCancelButtonText(getResources().getString(R.string.cancel), AlertSheetDialog.ButtonType.DESTROY);
                     asd.show(getSupportFragmentManager(), "");
                 }

@@ -24,6 +24,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.lab240.devices.Device;
 import com.lab240.devices.DeviceTypes;
+import com.lab240.devices.Hint;
 import com.lab240.devices.Out;
 import com.lab240.devices.OutLine;
 import com.lab240.lab240.adapters.HintAdapter;
@@ -77,7 +78,7 @@ public class TerminalActivity extends AppCompatActivity {
     Map<Pair<String, Out>, Pair<String, Long>> values = new HashMap<>();
     Multimap<Pair<String, Out>, ItemHolder.Updater> updaters = ArrayListMultimap.create();
     public Set<Pair<String, MQTT.MessageCallback>> callbacks = new HashSet<>();
-    final LinkedList<String> hints = new LinkedList<>();
+    final LinkedList<Hint> hints = new LinkedList<>();
     LinearLayout bars;
     Timer updateTimer;
     TerminalItemAdapter ia;
@@ -176,13 +177,15 @@ public class TerminalActivity extends AppCompatActivity {
 
         send.setOnClickListener(view -> {
             String c = cmd.getText().toString();
-            if(c.matches("^\\w*$"))
+            if(c.matches("^\\s*$")) {
+                cmd.setText("");
                 return;
+            }
             Log.i("action", "\""+c+"\" sended in TerminalActivity");
             cmd.setText("");
             send(c);
-            hints.removeAll(Collections.singletonList(c));
-            hints.addFirst(c);
+            hints.removeAll(Collections.singletonList(new Hint(c)));
+            hints.addFirst(new Hint(c));
             historyHintAdapter.setData(hints);
         });
 

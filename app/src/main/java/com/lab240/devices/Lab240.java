@@ -5,8 +5,6 @@ import android.content.SharedPreferences;
 import android.util.Log;
 import android.util.Pair;
 
-import androidx.recyclerview.widget.ListAdapter;
-
 import com.google.common.base.Optional;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -18,6 +16,8 @@ import com.lab240.utils.DeviceAdapter;
 import com.lab240.utils.DeviceListAdapter;
 import com.lab240.utils.DeviceTypeAdapter;
 import com.lab240.utils.DeviceTypeMapAdapter;
+import com.lab240.utils.HintAdapter;
+import com.lab240.utils.HintListAdapter;
 import com.lab240.utils.OutAdapter;
 import com.lab240.utils.OutSetAdapter;
 
@@ -43,9 +43,11 @@ public class Lab240 {
             .registerTypeAdapter(Device.class, new DeviceAdapter())
             .registerTypeAdapter(DeviceTypes.class, new DeviceTypeAdapter())
             .registerTypeAdapter(Out.class, new OutAdapter())
+            .registerTypeAdapter(Hint.class, new HintAdapter())
             .registerTypeAdapter(new TypeToken<List<Device>>(){}.getType(), new DeviceListAdapter())
             .registerTypeAdapter(new TypeToken<Map<Long, DeviceTypes>>(){}.getType(), new DeviceTypeMapAdapter())
             .registerTypeAdapter(new TypeToken<Set<Out>>(){}.getType(), new OutSetAdapter())
+            .registerTypeAdapter(new TypeToken<List<Hint>>(){}.getType(), new HintListAdapter())
             .create();
 
 
@@ -163,10 +165,10 @@ public class Lab240 {
     public static Pair<List<Device>, Map<Long, DeviceTypes>> fromDeviceConfig(String string){
         try {
             JsonObject jo = gson.fromJson(string, JsonObject.class);
-            Map<Long, DeviceTypes> types = gson.fromJson(jo.get(DEVICE_TYPES), new TypeToken<Map<Long, DeviceTypes>>() {
-            }.getType());
-            List<Device> devices = gson.fromJson(jo.get(DEVICES), new TypeToken<List<Device>>() {
-            }.getType());
+            Map<Long, DeviceTypes> types = jo.has(DEVICE_TYPES) ? gson.fromJson(jo.get(DEVICE_TYPES), new TypeToken<Map<Long, DeviceTypes>>() {
+            }.getType()) : Collections.emptyMap();
+            List<Device> devices = jo.has(DEVICES) ? gson.fromJson(jo.get(DEVICES), new TypeToken<List<Device>>() {
+            }.getType()) : Collections.emptyList();
             for (Device d : devices) {
                 if (!types.containsKey(d.getType()))
                     d.setType(DeviceTypes.EMPTY.id);
@@ -200,7 +202,7 @@ public class Lab240 {
             }
             for (Map.Entry<Long, DeviceTypes> t : types.entrySet()) {
                 DeviceTypes dt = t.getValue();
-                types2.put(t.getValue().id, new DeviceTypes(dt.name, toReplace.get(t.getKey()), dt.relays, dt.outs, dt.setterHints, dt.getterHints));
+                types2.put(toReplace.get(t.getKey()), new DeviceTypes(dt.name, toReplace.get(t.getKey()), dt.relays, dt.outs, dt.setterHints, dt.getterHints));
             }
             return Pair.create(devices2, types2);
         }catch (JsonSyntaxException e){

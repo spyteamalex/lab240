@@ -9,6 +9,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.lab240.devices.Hint;
 import com.lab240.lab240.R;
 
 import java.util.ArrayList;
@@ -22,10 +23,10 @@ public class HintAdapter extends RecyclerView.Adapter<HintItem> {
 
     @Override
     public void onBindViewHolder(final HintItem holder, final int position) {
-        final String hint = hints.get(position);
-        holder.hint.setText(hint);
+        final Hint hint = hints.get(position);
+        holder.hint.setText(hint.getHint());
         holder.itemView.setOnClickListener(v -> {
-            if (clickListener != null) clickListener.handle(hint);
+            if (clickListener != null) clickListener.handle(hint.getCmd());
         });
     }
 
@@ -41,7 +42,7 @@ public class HintAdapter extends RecyclerView.Adapter<HintItem> {
         return new HintItem(view);
     }
 
-    final ArrayList<String> hints = new ArrayList<>();
+    final ArrayList<Hint> hints = new ArrayList<>();
 
     public HintAdapter(FragmentManager fm, @Nullable ClickListener clickListener) {
         this.clickListener = clickListener;
@@ -51,7 +52,7 @@ public class HintAdapter extends RecyclerView.Adapter<HintItem> {
     final FragmentManager fm;
     final @Nullable ClickListener clickListener;
 
-    public void setData(Collection<String> items){
+    public void setData(Collection<Hint> items){
         this.hints.clear();
         this.hints.addAll(items);
         notifyDataSetChanged();

@@ -4,6 +4,14 @@ import java.util.List;
 
 public class Comparator {
 
+    public static int unite(int... v){
+        for(int i : v){
+            if(i != 0)
+                return i;
+        }
+        return 0;
+    }
+
     public static <T extends Comparable<T>> int compare(List<T> one, List<T> two){
         if(one.size() != two.size())
             return compare(one.size(), two.size());

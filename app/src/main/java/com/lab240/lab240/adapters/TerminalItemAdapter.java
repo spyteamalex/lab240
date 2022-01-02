@@ -78,7 +78,7 @@ public class TerminalItemAdapter extends RecyclerView.Adapter<ViewHolder>{
                 if (values.containsKey(itemP))
                     itemHolder.update(values.get(itemP).first);
                 else
-                    itemHolder.update(ItemHolder.OUT_DEFAULT);
+                    itemHolder.update(null);
                 break;
         }
     }

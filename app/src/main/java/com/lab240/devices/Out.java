@@ -33,11 +33,7 @@ public class Out implements Comparable<Out>  {
 
     @Override
     public int compareTo(Out out) {
-        int names = getName().compareTo(out.getName());
-        int paths = Comparator.compare(path, out.path);
-        if(names != 0)
-            return names;
-        return paths;
+        return Comparator.unite(getName().compareTo(out.getName()),Comparator.compare(path, out.path));
     }
 
     @Override

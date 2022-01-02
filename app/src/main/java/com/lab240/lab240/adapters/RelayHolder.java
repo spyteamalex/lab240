@@ -30,6 +30,6 @@ public class RelayHolder extends RecyclerView.ViewHolder{
 
     public void update(@Nullable String v){
         value.setImageResource("1".equals(v) ? R.drawable.relay_on_image : R.drawable.relay_off_image);
-        deviceHolder.setAvailable(v != null);
+        if(deviceHolder != null) deviceHolder.setAvailable(v != null);
     }
 }

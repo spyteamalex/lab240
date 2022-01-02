@@ -32,7 +32,7 @@ public class ItemHolder extends RecyclerView.ViewHolder{
             value.setText(OUT_DEFAULT);
         else {
             value.setText(v);
-
+            if(deviceHolder != null) deviceHolder.setAvailable(true);
         }
     }
 
