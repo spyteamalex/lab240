@@ -3,6 +3,7 @@ package com.lab240.lab240.adapters;
 import android.content.Context;
 import android.os.Vibrator;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -43,9 +44,11 @@ public class DeviceTypesHolder extends RecyclerView.ViewHolder{
 
         relaysAdapter = new OutAdapter();
         relays.setAdapter(relaysAdapter);
+        relays.setOnLongClickListener(v->itemView.performLongClick());
 
         outsAdapter = new OutAdapter();
         outs.setAdapter(outsAdapter);
+        outs.setOnLongClickListener(v->itemView.performLongClick());
 
         itemView.setOnLongClickListener(view -> {
             Log.i("action", "Call context menu in DeviceTypesHolder");
@@ -77,9 +80,9 @@ public class DeviceTypesHolder extends RecyclerView.ViewHolder{
         @NonNull
         @Override
         public OutHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            OutHolder outHolder = new OutHolder(new TextView(parent.getContext()));
+            OutHolder outHolder = new OutHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.inflate_device_type_out, parent, false));
             outHolder.itemView.setOnLongClickListener(view -> {
-                Log.i("action", "Click in OutAdapter");
+                Log.i("action", "Long click in OutAdapter");
                 return parent.performLongClick();
             });
             return outHolder;
@@ -100,6 +103,7 @@ public class DeviceTypesHolder extends RecyclerView.ViewHolder{
         public void setData(Collection<Out> data){
             outs.clear();
             outs.addAll(data);
+            notifyDataSetChanged();
         }
     }
 
@@ -111,7 +115,7 @@ public class DeviceTypesHolder extends RecyclerView.ViewHolder{
         }
     }
 
-    public static interface Functions{
+    public interface Functions{
         void delete(DeviceTypes dt);
         void edit(DeviceTypes dt);
     }

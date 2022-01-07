@@ -102,7 +102,7 @@ public class LoginActivity extends AppCompatActivity {
         loginLayout.setVisibility(View.GONE);
         progressBar.setVisibility(View.VISIBLE);
 
-        MQTT mqtt = new MQTT(getResources().getString(R.string.server), name, pass);
+        MQTT mqtt = new MQTT(getString(R.string.server), name, pass);
         mqtt.connect(this, new IMqttActionListener() {
             @Override
             public void onSuccess(IMqttToken asyncActionToken) {
@@ -138,9 +138,9 @@ public class LoginActivity extends AppCompatActivity {
                     Log.i("info", "Showing dialog in check() in LoginActivity");
                     AlertSheetDialog asd = new AlertSheetDialog(LoginActivity.this);
                     asd.setCloseOnAction(false);
-                    asd.addText(getResources().getString(R.string.login_fail));
-                    asd.addButton(getResources().getString(R.string.try_again), btn -> check(name, pass, devices, groups, deviceTypes,false, newAcc), AlertSheetDialog.ButtonType.DEFAULT);
-                    asd.setCancelButtonText(getResources().getString(R.string.cancel), AlertSheetDialog.ButtonType.DESTROY);
+                    asd.addText(getString(R.string.login_fail));
+                    asd.addButton(getString(R.string.try_again), btn -> check(name, pass, devices, groups, deviceTypes,false, newAcc), AlertSheetDialog.ButtonType.DEFAULT);
+                    asd.setCancelButtonText(getString(R.string.cancel), AlertSheetDialog.ButtonType.DESTROY);
                     asd.show(getSupportFragmentManager(), "");
                 }
             }

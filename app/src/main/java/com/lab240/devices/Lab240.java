@@ -53,7 +53,7 @@ public class Lab240 {
 
     public static final Map<Long, DeviceTypes> DEFAULT_TYPES = new TreeMap<>();
     static {
-        DEFAULT_TYPES.put(DeviceTypes.EMPTY.id, DeviceTypes.EMPTY);
+        DEFAULT_TYPES.put(DeviceTypes.EMPTY.getId(), DeviceTypes.EMPTY);
     }
 
     public static class Config{
@@ -65,14 +65,14 @@ public class Lab240 {
             this.pass = pass;
             this.devices = devices;
             this.deviceTypes = deviceTypes;
-            this.deviceTypes.put(DeviceTypes.EMPTY.id, DeviceTypes.EMPTY);
+            this.deviceTypes.put(DeviceTypes.EMPTY.getId(), DeviceTypes.EMPTY);
             this.hiddenGroups = new HashSet<>();
             if(devices != null && hiddenGroups != null)
                 for(Device d : devices){
                     if(hiddenGroups.contains(d.getGroup()))
                         this.hiddenGroups.add(d.getGroup());
                     if(!deviceTypes.containsKey(d.getType()))
-                        d.setType(DeviceTypes.EMPTY.id);
+                        d.setType(DeviceTypes.EMPTY.getId());
                 }
         }
 
@@ -171,11 +171,11 @@ public class Lab240 {
             }.getType()) : Collections.emptyList();
             for (Device d : devices) {
                 if (!types.containsKey(d.getType()))
-                    d.setType(DeviceTypes.EMPTY.id);
+                    d.setType(DeviceTypes.EMPTY.getId());
             }
             Map<Long, Long> toReplace = new TreeMap<>();
             long i = 0;
-            toReplace.put(DeviceTypes.EMPTY.id, DeviceTypes.EMPTY.id);
+            toReplace.put(DeviceTypes.EMPTY.getId(), DeviceTypes.EMPTY.getId());
             for (Map.Entry<Long, DeviceTypes> t : types.entrySet()) {
                 long key = -1;
                 for (Map.Entry<Long, DeviceTypes> p : Lab240.deviceTypes.entrySet()) {
@@ -202,7 +202,7 @@ public class Lab240 {
             }
             for (Map.Entry<Long, DeviceTypes> t : types.entrySet()) {
                 DeviceTypes dt = t.getValue();
-                types2.put(toReplace.get(t.getKey()), new DeviceTypes(dt.name, toReplace.get(t.getKey()), dt.relays, dt.outs, dt.setterHints, dt.getterHints));
+                types2.put(toReplace.get(t.getKey()), new DeviceTypes(dt.getName(), toReplace.get(t.getKey()), dt.getRelays(), dt.getOuts(), dt.getSetterHints(), dt.getGetterHints()));
             }
             return Pair.create(devices2, types2);
         }catch (JsonSyntaxException e){

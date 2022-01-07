@@ -13,11 +13,42 @@ import java.util.TreeSet;
 
 public class DeviceTypes implements Showable {
     public static final DeviceTypes EMPTY = new DeviceTypes("Устройство", 0);
-    public final Set<Out> outs, relays;
-    public String name;
-    public final long id;
-    public final List<Hint> setterHints;
-    public final List<Hint> getterHints;
+    private final Set<Out> outs, relays;
+
+    public String getName() {
+        return name;
+    }
+
+    public DeviceTypes setName(String name) {
+        this.name = name;
+        return this;
+    }
+
+    private String name;
+    private final long id;
+    private final List<Hint> setterHints;
+
+    public Set<Out> getOuts() {
+        return outs;
+    }
+
+    public Set<Out> getRelays() {
+        return relays;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public List<Hint> getSetterHints() {
+        return setterHints;
+    }
+
+    public List<Hint> getGetterHints() {
+        return getterHints;
+    }
+
+    private final List<Hint> getterHints;
     public static final Out mainIn = new Out("params", "in");
     public static final Out mainOut = new Out("info", "out");
     public static final Out log = new Out("log", "out");

@@ -139,8 +139,8 @@ public class ListActivity extends AppCompatActivity {
                 if(Lab240.getMqtt() == null || !Lab240.getMqtt().isConnected()){
                     Log.i("info", "No connection on calling terminal in ListActivity");
                     AlertSheetDialog asd = new AlertSheetDialog(ListActivity.this);
-                    asd.addText(getResources().getString(R.string.no_connection));
-                    asd.setCancelButtonText(getResources().getString(R.string.ok), AlertSheetDialog.ButtonType.DEFAULT);
+                    asd.addText(getString(R.string.no_connection));
+                    asd.setCancelButtonText(getString(R.string.ok), AlertSheetDialog.ButtonType.DEFAULT);
                     asd.show(getSupportFragmentManager(), "");
                     return;
                 }
@@ -215,7 +215,9 @@ public class ListActivity extends AppCompatActivity {
             editDevice();
         }else if(item.getItemId() == R.id.exit){
             Log.i("action", "Exit in ListActivity");
-            exit();
+            AlertSheetDialog asd = new AlertSheetDialog(this);
+            asd.addButton(getString(R.string.exit), view -> exit(), AlertSheetDialog.ButtonType.DESTROY);
+            asd.show(getSupportFragmentManager(), "");
         }else if(item.getItemId() == R.id.edit){
             Log.i("action", "Edit in ListActivity");
             changeActivity(DeviceTypesActivity.class);
@@ -233,10 +235,10 @@ public class ListActivity extends AppCompatActivity {
         final boolean editing = device != null;
         AlertSheetDialog asd2 = new AlertSheetDialog(this);
         asd2.show(getSupportFragmentManager(), "");
-        EditText name = asd2.addTextInput(getResources().getString(R.string.name));
+        EditText name = asd2.addTextInput(getString(R.string.name));
         if(editing) name.setText(device.getName());
         name.setSingleLine(true);
-        EditText iden = asd2.addTextInput(getResources().getString(R.string.id));
+        EditText iden = asd2.addTextInput(getString(R.string.id));
         iden.setSingleLine(true);
         if(editing) iden.setText(device.getIdentificator());
 
@@ -245,7 +247,7 @@ public class ListActivity extends AppCompatActivity {
             groups.add(d.getGroup());
         }
         List<String> groups2 = new ArrayList<>(groups);
-        groups2.add(getResources().getString(R.string.new_group));
+        groups2.add(getString(R.string.new_group));
         int gr = editing ? groups2.indexOf(device.getGroup()) : -1;
         if(gr == -1)
             gr = groups2.size()-1;
@@ -254,9 +256,9 @@ public class ListActivity extends AppCompatActivity {
         groupAdapter.setGravity(Gravity.CENTER);
         Spinner groupSpinner = asd2.addView(new Spinner(this));
         groupSpinner.setAdapter(groupAdapter);
-        groupSpinner.setPrompt(getResources().getString(R.string.group));
+        groupSpinner.setPrompt(getString(R.string.group));
 
-        EditText group = asd2.addTextInput(getResources().getString(R.string.group_name));
+        EditText group = asd2.addTextInput(getString(R.string.group_name));
         group.setSingleLine(true);
         if(editing) group.setText(device.getGroup());
 
@@ -280,7 +282,7 @@ public class ListActivity extends AppCompatActivity {
         List<Out> customRelays = new ArrayList<>();
         if(editing) {
             customRelays.addAll(device.getRelays());
-            customRelays.removeAll(Lab240.getDeviceTypes().get(device.getType()).relays);
+            customRelays.removeAll(Lab240.getDeviceTypes().get(device.getType()).getRelays());
         }
 
         Spinner type = new Spinner(this);
@@ -300,7 +302,7 @@ public class ListActivity extends AppCompatActivity {
                 String outName = path.get(path.size()-1);
                 path.remove(path.size()-1);
                 Out o = new Out(outName, path);
-                if(!((DeviceTypes)type.getSelectedItem()).relays.contains(o)) {
+                if(!((DeviceTypes)type.getSelectedItem()).getRelays().contains(o)) {
                     CheckBox cb = new CheckBox(newRelay.getContext());
                     cb.setOnCheckedChangeListener((compoundButton, b2) -> {
                         if (b2)
@@ -351,7 +353,7 @@ public class ListActivity extends AppCompatActivity {
         List<Out> customOuts = new ArrayList<>();
         if(editing) {
             customOuts.addAll(device.getOuts());
-            customOuts.removeAll(Lab240.getDeviceTypes().get(device.getType()).outs);
+            customOuts.removeAll(Lab240.getDeviceTypes().get(device.getType()).getOuts());
         }
 
         View newOut = getLayoutInflater().inflate(R.layout.inflate_new_out_view, outsLayout, false);
@@ -369,7 +371,7 @@ public class ListActivity extends AppCompatActivity {
                 String outName = path.get(path.size()-1);
                 path.remove(path.size()-1);
                 Out o = new Out(outName, path);
-                if(!((DeviceTypes)type.getSelectedItem()).outs.contains(o)) {
+                if(!((DeviceTypes)type.getSelectedItem()).getOuts().contains(o)) {
                     CheckBox cb = new CheckBox(newOut.getContext());
                     cb.setOnCheckedChangeListener((compoundButton, b2) -> {
                         if (b2)
@@ -407,7 +409,7 @@ public class ListActivity extends AppCompatActivity {
 
         asd2.addView(type);
         type.setAdapter(typeAdapter);
-        type.setPrompt(getResources().getString(R.string.device));
+        type.setPrompt(getString(R.string.device));
 
         type.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -420,13 +422,13 @@ public class ListActivity extends AppCompatActivity {
                 relays.clear();
 
                 List<Out> outs1 = new ArrayList<>(customOuts);
-                outs1.removeAll(devices.outs);
-                outs1.addAll(devices.outs);
+                outs1.removeAll(devices.getOuts());
+                outs1.addAll(devices.getOuts());
                 Collections.sort(outs1);
 
                 List<Out> relays1 = new ArrayList<>(customRelays);
-                relays1.removeAll(devices.relays);
-                relays1.addAll(devices.relays);
+                relays1.removeAll(devices.getRelays());
+                relays1.addAll(devices.getRelays());
                 Collections.sort(relays1);
 
                 for(Out o : outs1){
@@ -437,13 +439,13 @@ public class ListActivity extends AppCompatActivity {
                         else{
                             outs.remove(o);
                             customOuts.remove(o);
-                            if(!devices.outs.contains(o)) {
+                            if(!devices.getOuts().contains(o)) {
                                 outsLayout.removeView(cb);
                                 outsLayout.setVisibility(outsLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
                             }
                         }
                     });
-                    cb.setChecked(!editing || customOuts.contains(o) || device.getOuts().contains(o) || device.getType() != devices.id);
+                    cb.setChecked(!editing || customOuts.contains(o) || device.getOuts().contains(o) || device.getType() != devices.getId());
                     cb.setText(o.getName());
                     outsLayout.addView(cb);
                 }
@@ -456,13 +458,13 @@ public class ListActivity extends AppCompatActivity {
                         else{
                             relays.remove(o);
                             customRelays.remove(o);
-                            if(!devices.relays.contains(o)) {
+                            if(!devices.getRelays().contains(o)) {
                                 relaysLayout.removeView(cb);
                                 relaysLayout.setVisibility(relaysLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
                             }
                         }
                     });
-                    cb.setChecked(!editing || customRelays.contains(o) || device.getRelays().contains(o) || (device.getType() != devices.id));
+                    cb.setChecked(!editing || customRelays.contains(o) || device.getRelays().contains(o) || (device.getType() != devices.getId()));
                     cb.setText(o.getName());
                     relaysLayout.addView(cb);
                 }
@@ -486,13 +488,13 @@ public class ListActivity extends AppCompatActivity {
 
         Button doneButton;
         if(!editing) {
-            doneButton = asd2.addButton(getResources().getString(R.string.create), btn -> {
+            doneButton = asd2.addButton(getString(R.string.create), btn -> {
                 long id = System.currentTimeMillis();
                 Device d = new Device(name.getText().toString(), iden.getText().toString(),
                         groupSpinner.getSelectedItemPosition() != groupSpinner.getCount() - 1 ?
                                 groups2.get(groupSpinner.getSelectedItemPosition()) :
                                 group.getText().toString(),
-                        id, ((DeviceTypes) type.getSelectedItem()).id);
+                        id, ((DeviceTypes) type.getSelectedItem()).getId());
                 d.getOuts().addAll(outs);
                 d.getRelays().addAll(relays);
                 Lab240.getDevices().add(d);
@@ -500,7 +502,7 @@ public class ListActivity extends AppCompatActivity {
                 Lab240.saveDevices(this, Lab240.getDevices());
             }, AlertSheetDialog.ButtonType.DEFAULT);
         }else{
-            doneButton = asd2.addButton(getResources().getString(R.string.edit), btn -> {
+            doneButton = asd2.addButton(getString(R.string.edit), btn -> {
                 device.getOuts().clear();
                 device.getOuts().addAll(outs);
 
@@ -509,7 +511,7 @@ public class ListActivity extends AppCompatActivity {
 
                 device.setName(name.getText().toString());
                 device.setIdentificator(iden.getText().toString());
-                device.setType(((DeviceTypes) type.getSelectedItem()).id);
+                device.setType(((DeviceTypes) type.getSelectedItem()).getId());
                 device.setGroup(groupSpinner.getSelectedItemPosition() != groupSpinner.getCount()-1 ?
                         groups2.get(groupSpinner.getSelectedItemPosition()) :
                         group.getText().toString());
@@ -577,8 +579,8 @@ public class ListActivity extends AppCompatActivity {
         if(showMsg) {
             Log.i("info", "Showing alert on no connection in ListActivity");
             AlertSheetDialog asd = new AlertSheetDialog(this);
-            asd.addText(getResources().getString(R.string.connection_lost));
-            asd.setCancelButtonText(getResources().getString(R.string.ok), AlertSheetDialog.ButtonType.DEFAULT);
+            asd.addText(getString(R.string.connection_lost));
+            asd.setCancelButtonText(getString(R.string.ok), AlertSheetDialog.ButtonType.DEFAULT);
             asd.show(getSupportFragmentManager(), "");
         }
         reconnectTimer = new Timer();

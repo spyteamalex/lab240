@@ -28,12 +28,12 @@ public class DeviceTypeAdapter implements JsonSerializer<DeviceTypes>, JsonDeser
     @Override
     public JsonElement serialize(DeviceTypes src, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject jo = new JsonObject();
-        jo.add(OUTS, context.serialize(src.outs));
-        jo.add(RELAYS, context.serialize(src.relays));
-        jo.addProperty(NAME, src.name);
-        jo.addProperty(ID, src.id);
-        jo.add(SETTER_HINTS, context.serialize(src.setterHints));
-        jo.add(GETTER_HINTS, context.serialize(src.getterHints));
+        jo.add(OUTS, context.serialize(src.getOuts()));
+        jo.add(RELAYS, context.serialize(src.getRelays()));
+        jo.addProperty(NAME, src.getName());
+        jo.addProperty(ID, src.getId());
+        jo.add(SETTER_HINTS, context.serialize(src.getSetterHints()));
+        jo.add(GETTER_HINTS, context.serialize(src.getGetterHints()));
         return jo;
     }
 

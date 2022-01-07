@@ -197,7 +197,7 @@ public class TerminalActivity extends AppCompatActivity {
             imm.showSoftInput(cmd, InputMethodManager.SHOW_IMPLICIT);
             cmd.setSelection(cmd.getText().length());
         });
-        setterHintAdapter.setData(Lab240.getDeviceTypes().get(device.getType()).setterHints);
+        setterHintAdapter.setData(Lab240.getDeviceTypes().get(device.getType()).getSetterHints());
         setterHints.setAdapter(setterHintAdapter);
 
         HintAdapter getterHintAdapter = new HintAdapter(getSupportFragmentManager(), str -> {
@@ -208,7 +208,7 @@ public class TerminalActivity extends AppCompatActivity {
             imm.showSoftInput(cmd, InputMethodManager.SHOW_IMPLICIT);
             cmd.setSelection(cmd.getText().length());
         });
-        getterHintAdapter.setData(Lab240.getDeviceTypes().get(device.getType()).getterHints);
+        getterHintAdapter.setData(Lab240.getDeviceTypes().get(device.getType()).getGetterHints());
         getterHints.setAdapter(getterHintAdapter);
 
         if(getSupportActionBar() != null) {
@@ -261,8 +261,8 @@ public class TerminalActivity extends AppCompatActivity {
     public void handleNoConnection(){
         Log.i("call", "Handling no connection in TerminalActivity");
         AlertSheetDialog asd = new AlertSheetDialog(this);
-        asd.addText(getResources().getString(R.string.connection_lost));
-        asd.setCancelButtonText(getResources().getString(R.string.ok), AlertSheetDialog.ButtonType.DEFAULT);
+        asd.addText(getString(R.string.connection_lost));
+        asd.setCancelButtonText(getString(R.string.ok), AlertSheetDialog.ButtonType.DEFAULT);
         asd.setCancelAction(v->finish());
         asd.show(getSupportFragmentManager(), "");
     }

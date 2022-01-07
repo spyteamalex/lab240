@@ -63,7 +63,7 @@ public class AlertSheetDialog extends BottomSheetDialogFragment {
         int padding = Converter.dpToPx(c, PADDING);
         cancel.setPadding(padding,padding,padding,padding);
         if(cancelText == null)
-            cancelText = getResources().getString(R.string.cancel);
+            cancelText = getString(R.string.cancel);
         setCancelButtonText(cancelText, cancelType);
         cancelLL.addView(cancel);
         getDialog().setOnShowListener(dialogInterface -> {

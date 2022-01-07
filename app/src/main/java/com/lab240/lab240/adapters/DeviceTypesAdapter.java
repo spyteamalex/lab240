@@ -31,15 +31,15 @@ public class DeviceTypesAdapter extends RecyclerView.Adapter<DeviceTypesHolder>{
     @Override
     public void onBindViewHolder(@NonNull DeviceTypesHolder holder, int position) {
         DeviceTypes dt = dts.get(position);
-        holder.name.setText(dt.name);
+        holder.name.setText(dt.getName());
         holder.dt = dt;
-        holder.relaysAdapter.setData(dt.relays);
-        holder.relays.setVisibility(dt.relays.isEmpty() ? View.GONE : View.VISIBLE);
-        holder.relaysLabel.setVisibility(dt.relays.isEmpty() ? View.GONE : View.VISIBLE);
+        holder.relaysAdapter.setData(dt.getRelays());
+        holder.relays.setVisibility(dt.getRelays().isEmpty() ? View.GONE : View.VISIBLE);
+        holder.relaysLabel.setVisibility(dt.getRelays().isEmpty() ? View.GONE : View.VISIBLE);
 
-        holder.outsAdapter.setData(dt.outs);
-        holder.outs.setVisibility(dt.outs.isEmpty() ? View.GONE : View.VISIBLE);
-        holder.outsLabel.setVisibility(dt.outs.isEmpty() ? View.GONE : View.VISIBLE);
+        holder.outsAdapter.setData(dt.getOuts());
+        holder.outs.setVisibility(dt.getOuts().isEmpty() ? View.GONE : View.VISIBLE);
+        holder.outsLabel.setVisibility(dt.getOuts().isEmpty() ? View.GONE : View.VISIBLE);
     }
 
     @Override
