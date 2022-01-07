@@ -29,7 +29,6 @@ public class GroupHolder extends RecyclerView.ViewHolder{
     final DeviceAdapter adapter;
     String group;
 
-
     public GroupHolder(FragmentManager fm, @NonNull View itemView, Multimap<Pair<String, Out>, ItemHolder.Updater> updaters, Map<Pair<String, Out>, Pair<String, Long>> values, @Nullable DeviceHolder.Functions tc) {
         super(itemView);
         devices = itemView.findViewById(R.id.devices);
@@ -72,12 +71,14 @@ public class GroupHolder extends RecyclerView.ViewHolder{
                 EditText gr = asd2.addTextInput(itemView.getResources().getString(R.string.name));
                 gr.setSingleLine(true);
                 gr.setText(group);
-                asd2.addButton(itemView.getResources().getString(R.string.rename), btn2 -> tc.setGroup(adapter.devices, gr.getText().toString()), AlertSheetDialog.ButtonType.DEFAULT);
+                asd2.addButton(itemView.getResources().getString(R.string.rename), btn2 -> {
+                    if (tc != null) tc.setGroup(adapter.devices, gr.getText().toString());
+                }, AlertSheetDialog.ButtonType.DEFAULT);
                 asd2.show(fm, "");
             }, AlertSheetDialog.ButtonType.DEFAULT);
             asd.addButton(itemView.getResources().getString(R.string.delete), btn-> {
                 Log.i("action", "Delete group in GroupHolder");
-                tc.delete(adapter.devices);
+                if (tc != null) tc.delete(adapter.devices);
             }, AlertSheetDialog.ButtonType.DESTROY);
             asd.setDismissAction(()->itemView.setClickable(true));
             asd.show(fm, "");

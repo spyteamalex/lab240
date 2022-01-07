@@ -14,7 +14,7 @@ import java.util.TreeSet;
 public class DeviceTypes implements Showable {
     public static final DeviceTypes EMPTY = new DeviceTypes("Устройство", 0);
     public final Set<Out> outs, relays;
-    public final String name;
+    public String name;
     public final long id;
     public final List<Hint> setterHints;
     public final List<Hint> getterHints;
@@ -25,34 +25,34 @@ public class DeviceTypes implements Showable {
     public DeviceTypes(String name, long id) {
         this.id = id;
         this.name = name;
-        this.setterHints = Collections.emptyList();
-        this.getterHints = Collections.emptyList();
-        this.outs = Collections.emptySet();
-        this.relays = Collections.emptySet();
+        this.setterHints = new ArrayList<>();
+        this.getterHints = new ArrayList<>();
+        this.outs = new TreeSet<>();
+        this.relays = new TreeSet<>();
     }
 
     DeviceTypes(String name, long id, Out[] relays, Out[] outs, Hint[] setterHints, Hint[] getterHints) {
         this.id = id;
         this.name = name;
-        this.setterHints = Collections.unmodifiableList(Arrays.asList(setterHints));
-        this.getterHints = Collections.unmodifiableList(Arrays.asList(getterHints));
+        this.setterHints = new ArrayList<>(Arrays.asList(setterHints));
+        this.getterHints = new ArrayList<>(Arrays.asList(getterHints));
 
         Set<Out> outs1 = new TreeSet<>();
         Collections.addAll(outs1, outs);
-        this.outs = Collections.unmodifiableSet(outs1);
+        this.outs = outs1;
 
         Set<Out> relays1 = new TreeSet<>();
         Collections.addAll(relays1, relays);
-        this.relays = Collections.unmodifiableSet(relays1);
+        this.relays = relays1;
     }
 
     public DeviceTypes(String name, long id, Set<Out> relays, Set<Out> outs, List<Hint> setterHints, List<Hint> getterHints) {
         this.id = id;
         this.name = name;
-        this.setterHints = Collections.unmodifiableList(setterHints);
-        this.getterHints = Collections.unmodifiableList(getterHints);
-        this.outs = Collections.unmodifiableSet(outs);
-        this.relays = Collections.unmodifiableSet(relays);
+        this.setterHints = new ArrayList<>(setterHints);
+        this.getterHints = new ArrayList<>(getterHints);
+        this.outs = new TreeSet<>(outs);
+        this.relays = new TreeSet<>(relays);
     }
 
     @Override

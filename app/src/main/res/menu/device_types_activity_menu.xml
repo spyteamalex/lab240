@@ -2,21 +2,15 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/add"
-        android:icon="@drawable/ic_baseline_add_24"
+        android:id="@+id/export"
+        android:icon="@drawable/ic_baseline_upload_file_24"
         android:orderInCategory="100"
         app:showAsAction="always"
         android:title="@string/add" />
     <item
-        android:id="@+id/edit"
-        android:icon="@drawable/ic_baseline_edit_note_24"
+        android:id="@+id/imprt"
+        android:icon="@drawable/ic_baseline_folder_open_24"
         android:orderInCategory="100"
         app:showAsAction="always"
         android:title="@string/add" />
-    <item
-        android:id="@+id/exit"
-        android:icon="@drawable/ic_baseline_exit_to_app_24"
-        android:orderInCategory="100"
-        app:showAsAction="always"
-        android:title="@string/exit" />
 </menu>

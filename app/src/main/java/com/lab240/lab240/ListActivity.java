@@ -103,36 +103,12 @@ public class ListActivity extends AppCompatActivity {
                 }
             });
 
-    ActivityResultLauncher<Intent> filePicker = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if(result.getData() != null) {
-                    Log.i("info", "File is picked");
-                    openFile(result.getData().getData());
-                }else{
-                    Log.i("info", "File is not picked");
-                }
-            });
-
-    protected void openFile(Uri uri){
-        StringBuilder sb = new StringBuilder();
-        try (BufferedReader inputStream = new BufferedReader(new InputStreamReader(getContentResolver().openInputStream(uri)))){
-            int c;
-            while ((c = inputStream.read()) != -1) {
-                sb.append((char) c);
-            }
-
-        } catch (IOException e) {
-            Toast.makeText(this, R.string.import_error, Toast.LENGTH_LONG).show();
-            e.printStackTrace();
-        }
-        Pair<List<Device>, Map<Long, DeviceTypes>> res = Lab240.fromDeviceConfig(sb.toString());
-        Lab240.getDeviceTypes().putAll(res.second);
-        Lab240.getDevices().addAll(res.first);
-        Lab240.saveDevices(ListActivity.this, Lab240.getDevices());
-        Lab240.saveDeviceTypes(ListActivity.this, Lab240.getDeviceTypes());
-        update();
-        Toast.makeText(this, R.string.import_ok, Toast.LENGTH_LONG).show();
+    protected void changeActivity(Class<?> c){
+        Intent i = new Intent(this, c);
+        i.putExtras(getIntent());
+        i.setData(getIntent().getData());
+        i.setAction(getIntent().getAction());
+        startActivity(i);
     }
 
     @Override
@@ -212,8 +188,7 @@ public class ListActivity extends AppCompatActivity {
 
         Intent i = getIntent();
         if(Intent.ACTION_VIEW.equals(i.getAction()) && i.getData() != null){
-            Log.i("action", "Opening file from intent");
-            openFile(i.getData());
+            changeActivity(DeviceTypesActivity.class);
         }
     }
 
@@ -241,36 +216,13 @@ public class ListActivity extends AppCompatActivity {
         }else if(item.getItemId() == R.id.exit){
             Log.i("action", "Exit in ListActivity");
             exit();
-        }else if(item.getItemId() == R.id.export){
-            Log.i("action", "Export in ListActivity");
-
-            File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Config.lab240");
-            for (int i = 1; f.exists(); i++){
-                f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Config("+i+").lab240");
-            }
-            try {
-                f.createNewFile();
-                try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f)))) {
-                    out.write(Lab240.toDeviceConfig(Lab240.getDevices(), Lab240.getDeviceTypes()));
-                }
-                ((DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE)).addCompletedDownload(f.getName(),f.getName(),true,"application/json", f.getAbsolutePath(), f.length(),true);
-                Toast.makeText(this, getString(R.string.export_ok) + " " + f.getName(), Toast.LENGTH_LONG).show();
-            } catch (IOException e) {
-                e.printStackTrace();
-                Toast.makeText(this, R.string.export_error, Toast.LENGTH_LONG).show();
-            }
-
-        }else if(item.getItemId() == R.id.imprt){
-            Log.i("action", "Import in ListActivity");
-
-            Intent chooseFile = new Intent(Intent.ACTION_GET_CONTENT);
-            chooseFile.addCategory(Intent.CATEGORY_OPENABLE);
-            chooseFile.setType("*/*");
-            Intent intent = Intent.createChooser(chooseFile, getString(R.string.choose_config));
-            filePicker.launch(intent);
+        }else if(item.getItemId() == R.id.edit){
+            Log.i("action", "Edit in ListActivity");
+            changeActivity(DeviceTypesActivity.class);
         }
         return super.onOptionsItemSelected(item);
     }
+
     public void editDevice(){
         editDevice(null);
     }
@@ -684,6 +636,7 @@ public class ListActivity extends AppCompatActivity {
             Lab240.getMqtt().addOnConnectionLostCallback(lcc);
         if(Lab240.getMqtt() == null || !Lab240.getMqtt().isConnected())
             handleNoConnection(false);
+        update();
     }
 
     private void exit(){
