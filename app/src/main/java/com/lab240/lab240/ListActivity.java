@@ -229,19 +229,24 @@ public class ListActivity extends AppCompatActivity {
         editDevice(null);
     }
 
-    //todo подчистить, добавить комментарии
     public void editDevice(@Nullable Device device){
         Log.i("action", "Editing device (New = "+(device == null)+") in ListActivity");
         final boolean editing = device != null;
+        //Создание диалога
         AlertSheetDialog asd2 = new AlertSheetDialog(this);
         asd2.show(getSupportFragmentManager(), "");
+
+        //поле имени
         EditText name = asd2.addTextInput(getString(R.string.name));
         if(editing) name.setText(device.getName());
         name.setSingleLine(true);
+
+        //поле идентификатора
         EditText iden = asd2.addTextInput(getString(R.string.id));
         iden.setSingleLine(true);
         if(editing) iden.setText(device.getIdentificator());
 
+        //поле выбора группы
         Set<String> groups = new HashSet<>();
         for(Device d : Lab240.getDevices()){
             groups.add(d.getGroup());
@@ -258,15 +263,20 @@ public class ListActivity extends AppCompatActivity {
         groupSpinner.setAdapter(groupAdapter);
         groupSpinner.setPrompt(getString(R.string.group));
 
+        //поле добавление группы
         EditText group = asd2.addTextInput(getString(R.string.group_name));
         group.setSingleLine(true);
         if(editing) group.setText(device.getGroup());
 
+        //выбор типа
         ArrayList<DeviceTypes> typesList = new ArrayList<>(Lab240.getDeviceTypes().values());
         ShowableAdapter<DeviceTypes> typeAdapter = new ShowableAdapter<>(this, android.R.layout.simple_spinner_item, typesList);
         typeAdapter.setGravity(Gravity.CENTER);
         typeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
+        Spinner type = new Spinner(this);
+
+        //реле
         List<Out> relays = new ArrayList<>();
         LinearLayout relaysLayout = new LinearLayout(this);
         asd2.addView(relaysLayout);
@@ -285,59 +295,7 @@ public class ListActivity extends AppCompatActivity {
             customRelays.removeAll(Lab240.getDeviceTypes().get(device.getType()).getRelays());
         }
 
-        Spinner type = new Spinner(this);
-
-        View newRelay = getLayoutInflater().inflate(R.layout.inflate_new_out_view, relaysLayout, false);
-        asd2.addView(newRelay);
-        newRelay.setPadding(
-                newRelay.getPaddingLeft(),
-                0,
-                newRelay.getPaddingRight(),
-                newRelay.getPaddingBottom());
-        EditText newRelayText = newRelay.findViewById(R.id.name);
-        newRelayText.setHint(R.string.new_relay_placeholder);
-        Runnable addRelay = ()->{
-            if(newRelayText.getText().length() != 0){
-                ArrayList<String> path = new ArrayList<>(Arrays.asList(newRelayText.getText().toString().split("/")));
-                String outName = path.get(path.size()-1);
-                path.remove(path.size()-1);
-                Out o = new Out(outName, path);
-                if(!((DeviceTypes)type.getSelectedItem()).getRelays().contains(o)) {
-                    CheckBox cb = new CheckBox(newRelay.getContext());
-                    cb.setOnCheckedChangeListener((compoundButton, b2) -> {
-                        if (b2)
-                            relays.add(o);
-                        else {
-                            relays.remove(o);
-                            customRelays.remove(o);
-                            relaysLayout.removeView(cb);
-                            relaysLayout.setVisibility(relaysLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
-                        }
-                    });
-                    cb.setChecked(true);
-                    cb.setText(o.getName());
-                    relaysLayout.setVisibility(View.VISIBLE);
-                    customRelays.add(o);
-                    relaysLayout.addView(cb);
-                }
-                newRelayText.setText("");
-                newRelayText.clearFocus();
-                InputMethodManager imm= (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(newRelayText.getWindowToken(), 0);
-            }
-        };
-        newRelayText.setOnFocusChangeListener((view1, b) -> {
-            if(!b){
-                addRelay.run();
-            }
-        });
-        newRelayText.setOnEditorActionListener((textView, i12, keyEvent) -> {
-            if (EditorInfo.IME_ACTION_DONE == i12) {
-                addRelay.run();
-            }
-            return false;
-        });
-
+        //сенсоры
         List<Out> outs = new ArrayList<>();
         LinearLayout outsLayout = new LinearLayout(this);
         asd2.addView(outsLayout);
@@ -356,57 +314,7 @@ public class ListActivity extends AppCompatActivity {
             customOuts.removeAll(Lab240.getDeviceTypes().get(device.getType()).getOuts());
         }
 
-        View newOut = getLayoutInflater().inflate(R.layout.inflate_new_out_view, outsLayout, false);
-        asd2.addView(newOut);
-        newOut.setPadding(
-                newOut.getPaddingLeft(),
-                0,
-                newOut.getPaddingRight(),
-                newOut.getPaddingBottom());
-        EditText newOutText = newOut.findViewById(R.id.name);
-        newOutText.setHint(R.string.new_out_placeholder);
-        Runnable addOut = ()->{
-            if(newOutText.getText().length() != 0){
-                ArrayList<String> path = new ArrayList<>(Arrays.asList(newOutText.getText().toString().split("/")));
-                String outName = path.get(path.size()-1);
-                path.remove(path.size()-1);
-                Out o = new Out(outName, path);
-                if(!((DeviceTypes)type.getSelectedItem()).getOuts().contains(o)) {
-                    CheckBox cb = new CheckBox(newOut.getContext());
-                    cb.setOnCheckedChangeListener((compoundButton, b2) -> {
-                        if (b2)
-                            outs.add(o);
-                        else {
-                            outs.remove(o);
-                            customOuts.remove(o);
-                            outsLayout.removeView(cb);
-                            outsLayout.setVisibility(outsLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
-                        }
-                    });
-                    cb.setChecked(true);
-                    cb.setText(o.getName());
-                    outsLayout.setVisibility(View.VISIBLE);
-                    customOuts.add(o);
-                    outsLayout.addView(cb);
-                }
-                newOutText.setText("");
-                newOutText.clearFocus();
-                InputMethodManager imm= (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(newOutText.getWindowToken(), 0);
-            }
-        };
-        newOutText.setOnFocusChangeListener((view1, b) -> {
-            if(!b){
-                addOut.run();
-            }
-        });
-        newOutText.setOnEditorActionListener((textView, i12, keyEvent) -> {
-            if (EditorInfo.IME_ACTION_DONE == i12) {
-                addOut.run();
-            }
-            return false;
-        });
-
+        //выбор типа устройства
         asd2.addView(type);
         type.setAdapter(typeAdapter);
         type.setPrompt(getString(R.string.device));
@@ -441,7 +349,6 @@ public class ListActivity extends AppCompatActivity {
                             customOuts.remove(o);
                             if(!devices.getOuts().contains(o)) {
                                 outsLayout.removeView(cb);
-                                outsLayout.setVisibility(outsLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
                             }
                         }
                     });
@@ -460,7 +367,6 @@ public class ListActivity extends AppCompatActivity {
                             customRelays.remove(o);
                             if(!devices.getRelays().contains(o)) {
                                 relaysLayout.removeView(cb);
-                                relaysLayout.setVisibility(relaysLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
                             }
                         }
                     });
@@ -469,8 +375,115 @@ public class ListActivity extends AppCompatActivity {
                     relaysLayout.addView(cb);
                 }
 
-                outsLayout.setVisibility(outsLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
-                relaysLayout.setVisibility(relaysLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
+
+                //добавление нового реле
+                View newRelay = getLayoutInflater().inflate(R.layout.inflate_new_out_view, relaysLayout, false);
+                relaysLayout.addView(newRelay);
+                newRelay.setPadding(
+                        newRelay.getPaddingLeft(),
+                        0,
+                        newRelay.getPaddingRight(),
+                        newRelay.getPaddingBottom());
+                EditText newRelayText = newRelay.findViewById(R.id.name);
+                newRelayText.setHint(R.string.new_relay_placeholder);
+                Runnable addRelay = ()->{
+                    if(newRelayText.getText().length() != 0){
+
+                        String pth = newRelayText.getText().toString();
+                        pth = pth.replaceAll("^/*", "");
+                        pth = pth.replaceAll("/*$", "");
+                        pth = pth.replaceAll("/+", "/");
+                        ArrayList<String> path = new ArrayList<>(Arrays.asList(pth.split("/")));
+                        String outName = path.get(path.size()-1);
+                        path.remove(path.size()-1);
+                        Out o = new Out(outName, path);
+                        if(!((DeviceTypes)type.getSelectedItem()).getRelays().contains(o)) {
+                            CheckBox cb = new CheckBox(newRelay.getContext());
+                            cb.setOnCheckedChangeListener((compoundButton, b2) -> {
+                                if (b2)
+                                    relays.add(o);
+                                else {
+                                    relays.remove(o);
+                                    customRelays.remove(o);
+                                    relaysLayout.removeView(cb);
+                                }
+                            });
+                            cb.setChecked(true);
+                            cb.setText(o.getName());
+                            customRelays.add(o);
+                            relaysLayout.addView(cb, relaysLayout.getChildCount()-1);
+                        }
+                        newRelayText.setText("");
+                        newRelayText.clearFocus();
+                        InputMethodManager imm= (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(newRelayText.getWindowToken(), 0);
+                    }
+                };
+                newRelayText.setOnFocusChangeListener((view1, b) -> {
+                    if(!b){
+                        addRelay.run();
+                    }
+                });
+                newRelayText.setOnEditorActionListener((textView, i12, keyEvent) -> {
+                    if (EditorInfo.IME_ACTION_DONE == i12) {
+                        addRelay.run();
+                    }
+                    return false;
+                });
+
+                //добавление нового сенсора
+                View newOut = getLayoutInflater().inflate(R.layout.inflate_new_out_view, outsLayout, false);
+                outsLayout.addView(newOut);
+                newOut.setPadding(
+                        newOut.getPaddingLeft(),
+                        0,
+                        newOut.getPaddingRight(),
+                        newOut.getPaddingBottom());
+                EditText newOutText = newOut.findViewById(R.id.name);
+                newOutText.setHint(R.string.new_out_placeholder);
+                Runnable addOut = ()->{
+                    if(newOutText.getText().length() != 0){
+                        String pth = newOutText.getText().toString();
+                        pth = pth.replaceAll("^/*", "");
+                        pth = pth.replaceAll("/*$", "");
+                        pth = pth.replaceAll("/+", "/");
+                        ArrayList<String> path = new ArrayList<>(Arrays.asList(pth.split("/")));
+                        String outName = path.get(path.size()-1);
+                        path.remove(path.size()-1);
+                        Out o = new Out(outName, path);
+                        if(!((DeviceTypes)type.getSelectedItem()).getOuts().contains(o)) {
+                            CheckBox cb = new CheckBox(newOut.getContext());
+                            cb.setOnCheckedChangeListener((compoundButton, b2) -> {
+                                if (b2)
+                                    outs.add(o);
+                                else {
+                                    outs.remove(o);
+                                    customOuts.remove(o);
+                                    outsLayout.removeView(cb);
+                                }
+                            });
+                            cb.setChecked(true);
+                            cb.setText(o.getName());
+                            customOuts.add(o);
+                            outsLayout.addView(cb, outsLayout.getChildCount()-1);
+                        }
+                        newOutText.setText("");
+                        newOutText.clearFocus();
+                        InputMethodManager imm= (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(newOutText.getWindowToken(), 0);
+                    }
+                };
+                newOutText.setOnFocusChangeListener((view1, b) -> {
+                    if(!b){
+                        addOut.run();
+                    }
+                });
+                newOutText.setOnEditorActionListener((textView, i12, keyEvent) -> {
+                    if (EditorInfo.IME_ACTION_DONE == i12) {
+                        addOut.run();
+                    }
+                    return false;
+                });
             }
 
             @Override
@@ -486,6 +499,7 @@ public class ListActivity extends AppCompatActivity {
             type.setSelection(res);
         }
 
+        //кнопка добавления
         Button doneButton;
         if(!editing) {
             doneButton = asd2.addButton(getString(R.string.create), btn -> {
@@ -521,7 +535,7 @@ public class ListActivity extends AppCompatActivity {
             }, AlertSheetDialog.ButtonType.DEFAULT);
         }
 
-
+        //проверка заполненности полей
         Runnable check = ()->doneButton.setEnabled(name.getText().length() != 0 && iden.getText().length() != 0 && (groupSpinner.getSelectedItemPosition() != groupSpinner.getCount()-1 || group.getText().length() != 0));
 
         TextWatcher tw = new TextWatcher() {

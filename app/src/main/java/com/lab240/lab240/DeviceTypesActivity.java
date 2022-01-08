@@ -28,6 +28,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -219,56 +220,9 @@ public class DeviceTypesActivity extends AppCompatActivity {
                 relaysLayout.getPaddingRight(),
                 0);
 
-        View newRelay = getLayoutInflater().inflate(R.layout.inflate_new_out_view, relaysLayout, false);
-        asd2.addView(newRelay);
-        newRelay.setPadding(
-                newRelay.getPaddingLeft(),
-                0,
-                newRelay.getPaddingRight(),
-                newRelay.getPaddingBottom());
-        EditText newRelayText = newRelay.findViewById(R.id.name);
-        newRelayText.setHint(R.string.new_relay_placeholder);
-        Runnable addRelay = ()->{
-            if(newRelayText.getText().length() != 0){
-                ArrayList<String> path = new ArrayList<>(Arrays.asList(newRelayText.getText().toString().split("/")));
-                String outName = path.get(path.size()-1);
-                path.remove(path.size()-1);
-                Out o = new Out(outName, path);
-
-                View view = getLayoutInflater().inflate(R.layout.inflate_device_type_out_editable, relaysLayout, false);
-                ImageButton btn = view.findViewById(R.id.delete);
-                TextView text = view.findViewById(R.id.text);
-                btn.setOnClickListener(view1 -> {
-                    relays.remove(o);
-                    relaysLayout.removeView(view);
-                    relaysLayout.setVisibility(relaysLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
-                });
-                text.setText(outName);
-                relays.add(o);
-                relaysLayout.setVisibility(View.VISIBLE);
-                relaysLayout.addView(view);
-
-                newRelayText.setText("");
-                newRelayText.clearFocus();
-                InputMethodManager imm= (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(newRelayText.getWindowToken(), 0);
-            }
-        };
-        newRelayText.setOnFocusChangeListener((view1, b) -> {
-            if(!b){
-                addRelay.run();
-            }
-        });
-        newRelayText.setOnEditorActionListener((textView, i12, keyEvent) -> {
-            if (EditorInfo.IME_ACTION_DONE == i12) {
-                addRelay.run();
-            }
-            return false;
-        });
-
         List<Out> outs = new ArrayList<>();
         if(editing)
-            outs.addAll(deviceType.getRelays());
+            outs.addAll(deviceType.getOuts());
         LinearLayout outsLayout = new LinearLayout(this);
         asd2.addView(outsLayout);
         outsLayout.setOrientation(LinearLayout.VERTICAL);
@@ -280,8 +234,22 @@ public class DeviceTypesActivity extends AppCompatActivity {
                 outsLayout.getPaddingRight(),
                 0);
 
+        if(editing)
+            for(Out o : outs){
+                CheckBox cb = new CheckBox(this);
+                cb.setChecked(true);
+                cb.setText(o.getName());
+                cb.setOnCheckedChangeListener((compoundButton, b) -> {
+                    if(!b) {
+                        outs.remove(o);
+                        outsLayout.removeView(cb);
+                    }
+                });
+                outsLayout.addView(cb);
+            }
+
         View newOut = getLayoutInflater().inflate(R.layout.inflate_new_out_view, outsLayout, false);
-        asd2.addView(newOut);
+        outsLayout.addView(newOut);
         newOut.setPadding(
                 newOut.getPaddingLeft(),
                 0,
@@ -291,23 +259,25 @@ public class DeviceTypesActivity extends AppCompatActivity {
         newOutText.setHint(R.string.new_out_placeholder);
         Runnable addOut = ()->{
             if(newOutText.getText().length() != 0){
-                ArrayList<String> path = new ArrayList<>(Arrays.asList(newOutText.getText().toString().split("/")));
+                String pth = newOutText.getText().toString();
+                pth = pth.replaceAll("^/*", "");
+                pth = pth.replaceAll("/*$", "");
+                pth = pth.replaceAll("/+", "/");
+                ArrayList<String> path = new ArrayList<>(Arrays.asList(pth.split("/")));
                 String outName = path.get(path.size()-1);
                 path.remove(path.size()-1);
                 Out o = new Out(outName, path);
 
-                View view = getLayoutInflater().inflate(R.layout.inflate_device_type_out_editable, outsLayout, false);
-                ImageButton btn = view.findViewById(R.id.delete);
-                TextView text = view.findViewById(R.id.text);
-                btn.setOnClickListener(view1 -> {
-                    outs.remove(o);
-                    outsLayout.removeView(view);
-                    outsLayout.setVisibility(outsLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
+                CheckBox cb = new CheckBox(this);
+                cb.setChecked(true);
+                cb.setText(o.getName());
+                cb.setOnCheckedChangeListener((compoundButton, b) -> {
+                    if(!b) {
+                        outs.remove(o);
+                        outsLayout.removeView(cb);
+                    }
                 });
-                text.setText(outName);
-                outs.add(o);
-                outsLayout.setVisibility(View.VISIBLE);
-                outsLayout.addView(view);
+                outsLayout.addView(cb, outsLayout.getChildCount()-1);
 
                 newOutText.setText("");
                 newOutText.clearFocus();
@@ -328,35 +298,67 @@ public class DeviceTypesActivity extends AppCompatActivity {
         });
 
         if(editing)
-            for(Out o : outs){
-                View view = getLayoutInflater().inflate(R.layout.inflate_device_type_out_editable, relaysLayout, false);
-                ImageButton btn = view.findViewById(R.id.delete);
-                TextView text = view.findViewById(R.id.text);
-                text.setText(o.getName());
-                btn.setOnClickListener(view1 -> {
-                    outs.remove(o);
-                    outsLayout.removeView(view);
-                    outsLayout.setVisibility(outsLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
-                });
-                outsLayout.addView(view);
-            }
-
-        if(editing)
             for(Out o : relays){
-                View view = getLayoutInflater().inflate(R.layout.inflate_device_type_out_editable, relaysLayout, false);
-                ImageButton btn = view.findViewById(R.id.delete);
-                TextView text = view.findViewById(R.id.text);
-                text.setText(o.getName());
-                btn.setOnClickListener(view1 -> {
-                    relays.remove(o);
-                    relaysLayout.removeView(view);
-                    relaysLayout.setVisibility(relaysLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
+                CheckBox cb = new CheckBox(this);
+                cb.setChecked(true);
+                cb.setText(o.getName());
+                cb.setOnCheckedChangeListener((compoundButton, b) -> {
+                    if(!b) {
+                        relays.remove(o);
+                        relaysLayout.removeView(cb);
+                    }
                 });
-                relaysLayout.addView(view);
+                relaysLayout.addView(cb);
             }
 
-        outsLayout.setVisibility(outsLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
-        relaysLayout.setVisibility(relaysLayout.getChildCount() != 0 ? View.VISIBLE : View.GONE);
+        View newRelay = getLayoutInflater().inflate(R.layout.inflate_new_out_view, relaysLayout, false);
+        relaysLayout.addView(newRelay);
+        newRelay.setPadding(
+                newRelay.getPaddingLeft(),
+                0,
+                newRelay.getPaddingRight(),
+                newRelay.getPaddingBottom());
+        EditText newRelayText = newRelay.findViewById(R.id.name);
+        newRelayText.setHint(R.string.new_relay_placeholder);
+        Runnable addRelay = ()->{
+            if(newRelayText.getText().length() != 0){
+                String pth = newRelayText.getText().toString();
+                pth = pth.replaceAll("^/*", "");
+                pth = pth.replaceAll("/*$", "");
+                pth = pth.replaceAll("/+", "/");
+                ArrayList<String> path = new ArrayList<>(Arrays.asList(pth.split("/")));
+                String outName = path.get(path.size()-1);
+                path.remove(path.size()-1);
+                Out o = new Out(outName, path);
+
+                CheckBox cb = new CheckBox(this);
+                cb.setChecked(true);
+                cb.setText(o.getName());
+                cb.setOnCheckedChangeListener((compoundButton, b) -> {
+                    if(!b) {
+                        relays.remove(o);
+                        relaysLayout.removeView(cb);
+                    }
+                });
+                relaysLayout.addView(cb, relaysLayout.getChildCount()-1);
+
+                newRelayText.setText("");
+                newRelayText.clearFocus();
+                InputMethodManager imm= (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(newRelayText.getWindowToken(), 0);
+            }
+        };
+        newRelayText.setOnFocusChangeListener((view1, b) -> {
+            if(!b){
+                addRelay.run();
+            }
+        });
+        newRelayText.setOnEditorActionListener((textView, i12, keyEvent) -> {
+            if (EditorInfo.IME_ACTION_DONE == i12) {
+                addRelay.run();
+            }
+            return false;
+        });
 
         Button doneButton;
         if(!editing) {
