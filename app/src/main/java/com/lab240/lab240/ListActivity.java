@@ -277,6 +277,7 @@ public class ListActivity extends AppCompatActivity {
         Spinner type = new Spinner(this);
 
         //реле
+        asd2.addText(getString(R.string.relays));
         List<Out> relays = new ArrayList<>();
         LinearLayout relaysLayout = new LinearLayout(this);
         asd2.addView(relaysLayout);
@@ -296,6 +297,7 @@ public class ListActivity extends AppCompatActivity {
         }
 
         //сенсоры
+        asd2.addText(getString(R.string.sensors));
         List<Out> outs = new ArrayList<>();
         LinearLayout outsLayout = new LinearLayout(this);
         asd2.addView(outsLayout);
@@ -304,7 +306,7 @@ public class ListActivity extends AppCompatActivity {
         outsLayout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         outsLayout.setPadding(
                 outsLayout.getPaddingLeft(),
-                outsLayout.getPaddingTop(),
+                0,
                 outsLayout.getPaddingRight(),
                 0);
 
@@ -379,11 +381,6 @@ public class ListActivity extends AppCompatActivity {
                 //добавление нового реле
                 View newRelay = getLayoutInflater().inflate(R.layout.inflate_new_out_view, relaysLayout, false);
                 relaysLayout.addView(newRelay);
-                newRelay.setPadding(
-                        newRelay.getPaddingLeft(),
-                        0,
-                        newRelay.getPaddingRight(),
-                        newRelay.getPaddingBottom());
                 EditText newRelayText = newRelay.findViewById(R.id.name);
                 newRelayText.setHint(R.string.new_relay_placeholder);
                 Runnable addRelay = ()->{
@@ -434,11 +431,6 @@ public class ListActivity extends AppCompatActivity {
                 //добавление нового сенсора
                 View newOut = getLayoutInflater().inflate(R.layout.inflate_new_out_view, outsLayout, false);
                 outsLayout.addView(newOut);
-                newOut.setPadding(
-                        newOut.getPaddingLeft(),
-                        0,
-                        newOut.getPaddingRight(),
-                        newOut.getPaddingBottom());
                 EditText newOutText = newOut.findViewById(R.id.name);
                 newOutText.setHint(R.string.new_out_placeholder);
                 Runnable addOut = ()->{

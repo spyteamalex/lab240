@@ -171,7 +171,7 @@ public class TerminalActivity extends AppCompatActivity {
 
         outsView = findViewById(R.id.outlines);
         RecyclerView setterHints = findViewById(R.id.setters), getterHints = findViewById(R.id.getters), historyHints = findViewById(R.id.history);
-        TextView gettersLabel = findViewById(R.id.getterLabel), settersLabel = findViewById(R.id.setterLabel);
+        LinearLayout gettersLL = findViewById(R.id.getterLL), settersLL = findViewById(R.id.setterLL);
         Button send = findViewById(R.id.send);
         cmd = findViewById(R.id.cmd);
 
@@ -199,13 +199,13 @@ public class TerminalActivity extends AppCompatActivity {
         setterHintAdapter.setData(type.getSetterHints());
         setterHints.setAdapter(setterHintAdapter);
         setterHints.setVisibility(type.getSetterHints().isEmpty() ? View.GONE : View.VISIBLE);
-        settersLabel.setVisibility(type.getSetterHints().isEmpty() ? View.GONE : View.VISIBLE);
+        settersLL.setVisibility(type.getSetterHints().isEmpty() ? View.GONE : View.VISIBLE);
 
         HintAdapter getterHintAdapter = new HintAdapter(getSupportFragmentManager(), this::selectHint);
         getterHintAdapter.setData(type.getGetterHints());
         getterHints.setAdapter(getterHintAdapter);
         getterHints.setVisibility(type.getGetterHints().isEmpty() ? View.GONE : View.VISIBLE);
-        gettersLabel.setVisibility(type.getGetterHints().isEmpty() ? View.GONE : View.VISIBLE);
+        gettersLL.setVisibility(type.getGetterHints().isEmpty() ? View.GONE : View.VISIBLE);
 
         if(getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);

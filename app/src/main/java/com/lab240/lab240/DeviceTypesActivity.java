@@ -212,6 +212,7 @@ public class DeviceTypesActivity extends AppCompatActivity {
         if(editing) name.setText(deviceType.getName());
         name.setSingleLine(true);
 
+        asd2.addText(getString(R.string.relays));
         List<Out> relays = new ArrayList<>();
         if(editing)
             relays.addAll(deviceType.getRelays());
@@ -226,6 +227,7 @@ public class DeviceTypesActivity extends AppCompatActivity {
                 relaysLayout.getPaddingRight(),
                 0);
 
+        asd2.addText(getString(R.string.sensors));
         List<Out> outs = new ArrayList<>();
         if(editing)
             outs.addAll(deviceType.getOuts());
@@ -236,7 +238,7 @@ public class DeviceTypesActivity extends AppCompatActivity {
         outsLayout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         outsLayout.setPadding(
                 outsLayout.getPaddingLeft(),
-                outsLayout.getPaddingTop(),
+                0,
                 outsLayout.getPaddingRight(),
                 0);
 
@@ -256,11 +258,6 @@ public class DeviceTypesActivity extends AppCompatActivity {
 
         View newOut = getLayoutInflater().inflate(R.layout.inflate_new_out_view, outsLayout, false);
         outsLayout.addView(newOut);
-        newOut.setPadding(
-                newOut.getPaddingLeft(),
-                0,
-                newOut.getPaddingRight(),
-                newOut.getPaddingBottom());
         EditText newOutText = newOut.findViewById(R.id.name);
         newOutText.setHint(R.string.new_out_placeholder);
         Runnable addOut = ()->{
@@ -319,11 +316,6 @@ public class DeviceTypesActivity extends AppCompatActivity {
 
         View newRelay = getLayoutInflater().inflate(R.layout.inflate_new_out_view, relaysLayout, false);
         relaysLayout.addView(newRelay);
-        newRelay.setPadding(
-                newRelay.getPaddingLeft(),
-                0,
-                newRelay.getPaddingRight(),
-                newRelay.getPaddingBottom());
         EditText newRelayText = newRelay.findViewById(R.id.name);
         newRelayText.setHint(R.string.new_relay_placeholder);
         Runnable addRelay = ()->{
@@ -416,6 +408,7 @@ public class DeviceTypesActivity extends AppCompatActivity {
         AlertSheetDialog asd2 = new AlertSheetDialog(this);
         asd2.show(getSupportFragmentManager(), "");
 
+        asd2.addText(getString(R.string.get));
         List<Hint> getters = new ArrayList<>(deviceType.getGetterHints());
         LinearLayout gettersLayout = new LinearLayout(this);
         asd2.addView(gettersLayout);
@@ -424,10 +417,11 @@ public class DeviceTypesActivity extends AppCompatActivity {
         gettersLayout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         gettersLayout.setPadding(
                 gettersLayout.getPaddingLeft(),
-                gettersLayout.getPaddingTop(),
+                0,
                 gettersLayout.getPaddingRight(),
                 0);
 
+        asd2.addText(getString(R.string.set));
         List<Hint> setters = new ArrayList<>(deviceType.getSetterHints());
         LinearLayout settersLayout = new LinearLayout(this);
         asd2.addView(settersLayout);
@@ -436,7 +430,7 @@ public class DeviceTypesActivity extends AppCompatActivity {
         settersLayout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         settersLayout.setPadding(
                 settersLayout.getPaddingLeft(),
-                settersLayout.getPaddingTop(),
+                0,
                 settersLayout.getPaddingRight(),
                 0);
 
@@ -455,11 +449,6 @@ public class DeviceTypesActivity extends AppCompatActivity {
 
         View newSetter = getLayoutInflater().inflate(R.layout.inflate_hint_editable, settersLayout, false);
         settersLayout.addView(newSetter);
-        newSetter.setPadding(
-                newSetter.getPaddingLeft(),
-                0,
-                newSetter.getPaddingRight(),
-                newSetter.getPaddingBottom());
         EditText newSetterCommand = newSetter.findViewById(R.id.command);
         EditText newSetterHint = newSetter.findViewById(R.id.hint);
         Runnable addSetter = ()->{
@@ -509,11 +498,6 @@ public class DeviceTypesActivity extends AppCompatActivity {
 
         View newGetter = getLayoutInflater().inflate(R.layout.inflate_hint_editable, gettersLayout, false);
         gettersLayout.addView(newGetter);
-        newGetter.setPadding(
-                newGetter.getPaddingLeft(),
-                0,
-                newGetter.getPaddingRight(),
-                newGetter.getPaddingBottom());
         EditText newGetterCommand = newGetter.findViewById(R.id.command);
         EditText newGetterHint = newGetter.findViewById(R.id.hint);
         Runnable addGetter = ()->{
