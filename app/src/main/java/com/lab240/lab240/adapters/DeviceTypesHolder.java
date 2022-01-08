@@ -61,6 +61,10 @@ public class DeviceTypesHolder extends RecyclerView.ViewHolder{
                     Log.i("action", "Edit type in GroupHolder");
                     if (functions != null) functions.edit(dt);
                 }, AlertSheetDialog.ButtonType.DEFAULT);
+                asd.addButton(itemView.getResources().getString(R.string.editHints), btn -> {
+                    Log.i("action", "Edit hints in GroupHolder");
+                    if (functions != null) functions.editHint(dt);
+                }, AlertSheetDialog.ButtonType.DEFAULT);
                 asd.addButton(itemView.getResources().getString(R.string.delete), btn -> {
                     Log.i("action", "Delete type in DeviceTypesHolder");
                     if (functions != null) functions.delete(dt);
@@ -118,5 +122,6 @@ public class DeviceTypesHolder extends RecyclerView.ViewHolder{
     public interface Functions{
         void delete(DeviceTypes dt);
         void edit(DeviceTypes dt);
+        void editHint(DeviceTypes dt);
     }
 }

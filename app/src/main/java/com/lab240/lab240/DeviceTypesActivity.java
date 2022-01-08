@@ -39,6 +39,7 @@ import android.widget.Toast;
 
 import com.lab240.devices.Device;
 import com.lab240.devices.DeviceTypes;
+import com.lab240.devices.Hint;
 import com.lab240.devices.Lab240;
 import com.lab240.devices.Out;
 import com.lab240.lab240.adapters.DeviceTypesAdapter;
@@ -102,6 +103,11 @@ public class DeviceTypesActivity extends AppCompatActivity {
             @Override
             public void edit(DeviceTypes dt) {
                 editDeviceType(dt);
+            }
+
+            @Override
+            public void editHint(DeviceTypes dt) {
+                editHints(dt);
             }
         });
         types.setAdapter(adapter);
@@ -403,5 +409,152 @@ public class DeviceTypesActivity extends AppCompatActivity {
             }
         };
         name.addTextChangedListener(tw);
+    }
+
+    public void editHints(DeviceTypes deviceType){
+        Log.i("action", "Editing hints in DeviceTypesActivity");
+        AlertSheetDialog asd2 = new AlertSheetDialog(this);
+        asd2.show(getSupportFragmentManager(), "");
+
+        List<Hint> getters = new ArrayList<>(deviceType.getGetterHints());
+        LinearLayout gettersLayout = new LinearLayout(this);
+        asd2.addView(gettersLayout);
+        gettersLayout.setOrientation(LinearLayout.VERTICAL);
+        gettersLayout.setGravity(Gravity.CENTER);
+        gettersLayout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        gettersLayout.setPadding(
+                gettersLayout.getPaddingLeft(),
+                gettersLayout.getPaddingTop(),
+                gettersLayout.getPaddingRight(),
+                0);
+
+        List<Hint> setters = new ArrayList<>(deviceType.getSetterHints());
+        LinearLayout settersLayout = new LinearLayout(this);
+        asd2.addView(settersLayout);
+        settersLayout.setOrientation(LinearLayout.VERTICAL);
+        settersLayout.setGravity(Gravity.CENTER);
+        settersLayout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        settersLayout.setPadding(
+                settersLayout.getPaddingLeft(),
+                settersLayout.getPaddingTop(),
+                settersLayout.getPaddingRight(),
+                0);
+
+        for(Hint o : setters){
+            CheckBox cb = new CheckBox(this);
+            cb.setChecked(true);
+            cb.setText(o.getHint());
+            cb.setOnCheckedChangeListener((compoundButton, b) -> {
+                if(!b) {
+                    setters.remove(o);
+                    settersLayout.removeView(cb);
+                }
+            });
+            settersLayout.addView(cb);
+        }
+
+        View newSetter = getLayoutInflater().inflate(R.layout.inflate_hint_editable, settersLayout, false);
+        settersLayout.addView(newSetter);
+        newSetter.setPadding(
+                newSetter.getPaddingLeft(),
+                0,
+                newSetter.getPaddingRight(),
+                newSetter.getPaddingBottom());
+        EditText newSetterCommand = newSetter.findViewById(R.id.command);
+        EditText newSetterHint = newSetter.findViewById(R.id.hint);
+        Runnable addSetter = ()->{
+            if(newSetterCommand.getText().length() != 0 && newSetterHint.getText().length() != 0){
+                Hint o = new Hint(newSetterCommand.getText().toString(), newSetterHint.getText().toString());
+
+                CheckBox cb = new CheckBox(this);
+                cb.setChecked(true);
+                cb.setText(o.getHint());
+                cb.setOnCheckedChangeListener((compoundButton, b) -> {
+                    if(!b) {
+                        setters.remove(o);
+                        settersLayout.removeView(cb);
+                    }
+                });
+                setters.add(o);
+                settersLayout.addView(cb, settersLayout.getChildCount()-1);
+
+                newSetterCommand.setText("");
+                newSetterCommand.clearFocus();
+                newSetterHint.setText("");
+                newSetterHint.clearFocus();
+                InputMethodManager imm= (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(newSetterCommand.getWindowToken(), 0);
+                imm.hideSoftInputFromWindow(newSetterHint.getWindowToken(), 0);
+            }
+        };
+        newSetterHint.setOnEditorActionListener((textView, i12, keyEvent) -> {
+            if (EditorInfo.IME_ACTION_DONE == i12) {
+                addSetter.run();
+            }
+            return false;
+        });
+
+        for(Hint o : getters){
+            CheckBox cb = new CheckBox(this);
+            cb.setChecked(true);
+            cb.setText(o.getHint());
+            cb.setOnCheckedChangeListener((compoundButton, b) -> {
+                if(!b) {
+                    getters.remove(o);
+                    gettersLayout.removeView(cb);
+                }
+            });
+            gettersLayout.addView(cb);
+        }
+
+        View newGetter = getLayoutInflater().inflate(R.layout.inflate_hint_editable, gettersLayout, false);
+        gettersLayout.addView(newGetter);
+        newGetter.setPadding(
+                newGetter.getPaddingLeft(),
+                0,
+                newGetter.getPaddingRight(),
+                newGetter.getPaddingBottom());
+        EditText newGetterCommand = newGetter.findViewById(R.id.command);
+        EditText newGetterHint = newGetter.findViewById(R.id.hint);
+        Runnable addGetter = ()->{
+            if(newGetterCommand.getText().length() != 0 && newGetterHint.getText().length() != 0){
+                Hint o = new Hint(newGetterCommand.getText().toString(), newGetterHint.getText().toString());
+
+                CheckBox cb = new CheckBox(this);
+                cb.setChecked(true);
+                cb.setText(o.getHint());
+                cb.setOnCheckedChangeListener((compoundButton, b) -> {
+                    if(!b) {
+                        getters.remove(o);
+                        gettersLayout.removeView(cb);
+                    }
+                });
+                getters.add(o);
+                gettersLayout.addView(cb, gettersLayout.getChildCount()-1);
+
+                newGetterCommand.setText("");
+                newGetterCommand.clearFocus();
+                newGetterHint.setText("");
+                newGetterHint.clearFocus();
+                InputMethodManager imm= (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(newGetterHint.getWindowToken(), 0);
+            }
+        };
+        newGetterHint.setOnEditorActionListener((textView, i12, keyEvent) -> {
+            if (EditorInfo.IME_ACTION_DONE == i12) {
+                addGetter.run();
+            }
+            return false;
+        });
+
+        asd2.addButton(getString(R.string.edit), btn -> {
+            deviceType.getGetterHints().clear();
+            deviceType.getGetterHints().addAll(getters);
+
+            deviceType.getSetterHints().clear();
+            deviceType.getSetterHints().addAll(setters);
+
+            Lab240.saveDeviceTypes(this, Lab240.getDeviceTypes());
+        }, AlertSheetDialog.ButtonType.DEFAULT);
     }
 }

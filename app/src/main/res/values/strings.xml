@@ -43,4 +43,6 @@
     <string name="cant_edit_empty">Редактирование данного типа запрещено</string>
     <string name="set">Установить</string>
     <string name="get">Получить</string>
+    <string name="hint">Подсказка</string>
+    <string name="editHints">Изменить подсказки</string>
 </resources>
