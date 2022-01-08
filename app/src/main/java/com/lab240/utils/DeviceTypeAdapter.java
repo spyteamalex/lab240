@@ -48,8 +48,8 @@ public class DeviceTypeAdapter implements JsonSerializer<DeviceTypes>, JsonDeser
                     jo.get(ID).getAsLong(),
                     context.deserialize(jo.get(RELAYS), new TypeToken<Set<Out>>(){}.getType()),
                     context.deserialize(jo.get(OUTS), new TypeToken<Set<Out>>(){}.getType()),
-                    context.deserialize(jo.get(SETTER_HINTS), new TypeToken<List<Hint>>(){}.getType()),
-                    context.deserialize(jo.get(GETTER_HINTS), new TypeToken<List<Hint>>(){}.getType())
+                    context.deserialize(jo.get(GETTER_HINTS), new TypeToken<List<Hint>>(){}.getType()),
+                    context.deserialize(jo.get(SETTER_HINTS), new TypeToken<List<Hint>>(){}.getType())
             );
         }catch (IllegalStateException | ClassCastException e){
             return null;

@@ -1,23 +1,29 @@
 package com.lab240.lab240;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.flexbox.FlexboxLayout;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.gson.Gson;
@@ -34,6 +40,7 @@ import com.lab240.lab240.adapters.TerminalItemAdapter;
 import com.lab240.utils.AlertSheetDialog;
 import com.lab240.devices.Lab240;
 import com.lab240.devices.MQTT;
+import com.lab240.utils.MaxHeightLinearLayout;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
@@ -63,6 +70,7 @@ public class TerminalActivity extends AppCompatActivity {
     public static final String OUT_DATE_FORMAT = "'OUT'(dd.MM HH:mm):  ";
     public static final String LOG_DATE_FORMAT = "'LOG'(dd.MM HH:mm):  ";
     Device device;
+    DeviceTypes type;
     String in;
     String out;
     String log;
@@ -79,9 +87,11 @@ public class TerminalActivity extends AppCompatActivity {
     Multimap<Pair<String, Out>, ItemHolder.Updater> updaters = ArrayListMultimap.create();
     public Set<Pair<String, MQTT.MessageCallback>> callbacks = new HashSet<>();
     final LinkedList<Hint> hints = new LinkedList<>();
-    LinearLayout bars;
+    MaxHeightLinearLayout bars;
     Timer updateTimer;
     TerminalItemAdapter ia;
+    ConstraintLayout root;
+    EditText cmd;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,12 +110,15 @@ public class TerminalActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
 
+        root = findViewById(R.id.root);
+
         Gson gson = new GsonBuilder().create();
 
         bars = findViewById(R.id.bars);
         setBarsVisible(false);
 
         device = gson.fromJson(intent.getStringExtra(DEVICE), Device.class);
+        type = Lab240.getDeviceTypes().get(device.getType());
         in = Lab240.getOutPath(device, DeviceTypes.mainIn);
         out = Lab240.getOutPath(device, DeviceTypes.mainOut);
         log = Lab240.getOutPath(device, DeviceTypes.log);
@@ -155,24 +168,16 @@ public class TerminalActivity extends AppCompatActivity {
 
         outlines.addAll(device.getConsoleLasts());
 
-
         outsView = findViewById(R.id.outlines);
         RecyclerView setterHints = findViewById(R.id.setters), getterHints = findViewById(R.id.getters), historyHints = findViewById(R.id.history);
+        TextView gettersLabel = findViewById(R.id.getterLabel), settersLabel = findViewById(R.id.setterLabel);
         Button send = findViewById(R.id.send);
-        EditText cmd = findViewById(R.id.cmd);
+        cmd = findViewById(R.id.cmd);
 
         ta = new TerminalAdapter();
         outsView.setAdapter(ta);
 
-
-        HintAdapter historyHintAdapter = new HintAdapter(getSupportFragmentManager(), str -> {
-            Log.i("action", "history message \""+str+"\" selected in TerminalActivity");
-            cmd.setText(cmd.getText()+(cmd.getText().length() == 0 || cmd.getText().charAt(cmd.getText().length()-1) == ' ' ? "" : " ") + str);
-            cmd.requestFocus();
-            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.showSoftInput(cmd, InputMethodManager.SHOW_IMPLICIT);
-            cmd.setSelection(cmd.getText().length());
-        });
+        HintAdapter historyHintAdapter = new HintAdapter(getSupportFragmentManager(), this::selectHint);
         historyHints.setAdapter(historyHintAdapter);
 
         send.setOnClickListener(view -> {
@@ -181,7 +186,7 @@ public class TerminalActivity extends AppCompatActivity {
                 cmd.setText("");
                 return;
             }
-            Log.i("action", "\""+c+"\" sended in TerminalActivity");
+            Log.i("action", "\""+c+"\" sent in TerminalActivity");
             cmd.setText("");
             send(c);
             hints.removeAll(Collections.singletonList(new Hint(c)));
@@ -189,27 +194,17 @@ public class TerminalActivity extends AppCompatActivity {
             historyHintAdapter.setData(hints);
         });
 
-        HintAdapter setterHintAdapter = new HintAdapter(getSupportFragmentManager(), str -> {
-            Log.i("action", "setter \""+str+"\" selected in TerminalActivity");
-            cmd.setText(cmd.getText()+(cmd.getText().length() == 0 || cmd.getText().charAt(cmd.getText().length()-1) == ' ' ? "" : " ") + str);
-            cmd.requestFocus();
-            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.showSoftInput(cmd, InputMethodManager.SHOW_IMPLICIT);
-            cmd.setSelection(cmd.getText().length());
-        });
-        setterHintAdapter.setData(Lab240.getDeviceTypes().get(device.getType()).getSetterHints());
+        HintAdapter setterHintAdapter = new HintAdapter(getSupportFragmentManager(), this::selectHint);
+        setterHintAdapter.setData(type.getSetterHints());
         setterHints.setAdapter(setterHintAdapter);
+        setterHints.setVisibility(type.getSetterHints().isEmpty() ? View.GONE : View.VISIBLE);
+        settersLabel.setVisibility(type.getSetterHints().isEmpty() ? View.GONE : View.VISIBLE);
 
-        HintAdapter getterHintAdapter = new HintAdapter(getSupportFragmentManager(), str -> {
-            Log.i("action", "getter \""+str+"\" selected in TerminalActivity");
-            cmd.setText(cmd.getText()+(cmd.getText().length() == 0 || cmd.getText().charAt(cmd.getText().length()-1) == ' ' ? "" : " ") + str);
-            cmd.requestFocus();
-            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.showSoftInput(cmd, InputMethodManager.SHOW_IMPLICIT);
-            cmd.setSelection(cmd.getText().length());
-        });
-        getterHintAdapter.setData(Lab240.getDeviceTypes().get(device.getType()).getGetterHints());
+        HintAdapter getterHintAdapter = new HintAdapter(getSupportFragmentManager(), this::selectHint);
+        getterHintAdapter.setData(type.getGetterHints());
         getterHints.setAdapter(getterHintAdapter);
+        getterHints.setVisibility(type.getGetterHints().isEmpty() ? View.GONE : View.VISIBLE);
+        gettersLabel.setVisibility(type.getGetterHints().isEmpty() ? View.GONE : View.VISIBLE);
 
         if(getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -220,7 +215,31 @@ public class TerminalActivity extends AppCompatActivity {
         prepareTopics();
 
         update(outlines);
+    }
 
+    public void selectHint(String str){
+        Log.i("action", "hint \""+str+"\" selected in TerminalActivity");
+        cmd.setText(cmd.getText()+(cmd.getText().length() == 0 || cmd.getText().charAt(cmd.getText().length()-1) == ' ' ? "" : " ") + str);
+        cmd.requestFocus();
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.showSoftInput(cmd, InputMethodManager.SHOW_IMPLICIT);
+        cmd.setSelection(cmd.getText().length());
+    }
+
+    private final static double barsToScreen = 0.3;
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        ViewTreeObserver observer = root.getViewTreeObserver();
+        observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+
+            @Override
+            public void onGlobalLayout() {
+                Log.i("action", "resizing TerminalActivity");
+                root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                bars.setMaxHeight((int)(barsToScreen*root.getHeight()));
+            }
+        });
     }
 
     public synchronized void updateValues(String device, Out out) {
@@ -295,6 +314,15 @@ public class TerminalActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         Log.i("call", "Resume ListActivity");
+        ViewTreeObserver observer = root.getViewTreeObserver();
+        observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                Log.i("action", "resizing TerminalActivity");
+                root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                bars.setMaxHeight((int)(barsToScreen*root.getHeight()));
+            }
+        });
         if(lcc != null)
             Lab240.getMqtt().addOnConnectionLostCallback(lcc);
         updateTimer = new Timer();
@@ -357,7 +385,10 @@ public class TerminalActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.terminal_activity_menu, menu);
+        if(type.getGetterHints().size() + type.getSetterHints().size() > 0)
+            getMenuInflater().inflate(R.menu.terminal_activity_menu, menu);
+        else if(device.getRelays().size() + device.getOuts().size() > 0)
+            getMenuInflater().inflate(R.menu.terminal_activity_menu_no_hint_dialog, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -371,6 +402,10 @@ public class TerminalActivity extends AppCompatActivity {
             Log.i("action", (areBarsVisible ? "hide" : "show") + " bars ListActivity");
             setBarsVisible(!areBarsVisible);
             return true;
+        }else if(item.getItemId() == R.id.hintsDialog){
+            HintsDialog hd = new HintsDialog(this);
+            hd.setData(type.getGetterHints(), type.getSetterHints(), this::selectHint);
+            hd.create().show();
         }
         return super.onOptionsItemSelected(item);
     }

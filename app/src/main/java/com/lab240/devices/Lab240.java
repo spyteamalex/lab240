@@ -202,7 +202,7 @@ public class Lab240 {
             }
             for (Map.Entry<Long, DeviceTypes> t : types.entrySet()) {
                 DeviceTypes dt = t.getValue();
-                types2.put(toReplace.get(t.getKey()), new DeviceTypes(dt.getName(), toReplace.get(t.getKey()), dt.getRelays(), dt.getOuts(), dt.getSetterHints(), dt.getGetterHints()));
+                types2.put(toReplace.get(t.getKey()), new DeviceTypes(dt.getName(), toReplace.get(t.getKey()), dt.getRelays(), dt.getOuts(), dt.getGetterHints(), dt.getSetterHints()));
             }
             return Pair.create(devices2, types2);
         }catch (JsonSyntaxException e){

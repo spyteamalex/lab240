@@ -12,5 +12,6 @@
     android:layout_marginBottom="2dp"
     android:background="@drawable/hint_background"
     android:fontFamily="@font/allerta"
-    android:padding="3dp"
+    android:padding="5dp"
+    android:gravity="center"
     android:text="@string/command" />

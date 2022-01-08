@@ -109,13 +109,15 @@ public class LoginActivity extends AppCompatActivity {
                 Log.i("info", "Successful connection in LoginActivity");
                 Lab240.Config c = new Lab240.Config(name, pass, devices, groups, deviceTypes);
                 Lab240.setConfig(mqtt, c);
+                Lab240.saveConfig(LoginActivity.this, c);
                 if(newAcc) {
                     Pair<List<Device>, Map<Long, DeviceTypes>> listMapPair = Lab240.fromDeviceConfig(getString(R.string.default_config));
                     Lab240.getDevices().addAll(listMapPair.first);
                     Lab240.getDeviceTypes().putAll(listMapPair.second);
-                }
 
-                Lab240.saveConfig(LoginActivity.this, c);
+                    Lab240.saveDevices(LoginActivity.this, Lab240.getDevices());
+                    Lab240.saveDeviceTypes(LoginActivity.this, Lab240.getDeviceTypes());
+                }
 
                 if (ContextCompat.checkSelfPermission(LoginActivity.this,
                         Manifest.permission.WRITE_EXTERNAL_STORAGE)

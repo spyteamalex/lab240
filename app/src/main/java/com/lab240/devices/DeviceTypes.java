@@ -62,7 +62,7 @@ public class DeviceTypes implements Showable {
         this.relays = new TreeSet<>();
     }
 
-    DeviceTypes(String name, long id, Out[] relays, Out[] outs, Hint[] setterHints, Hint[] getterHints) {
+    DeviceTypes(String name, long id, Out[] relays, Out[] outs, Hint[] getterHints, Hint[] setterHints) {
         this.id = id;
         this.name = name;
         this.setterHints = new ArrayList<>(Arrays.asList(setterHints));
@@ -77,7 +77,7 @@ public class DeviceTypes implements Showable {
         this.relays = relays1;
     }
 
-    public DeviceTypes(String name, long id, Set<Out> relays, Set<Out> outs, List<Hint> setterHints, List<Hint> getterHints) {
+    public DeviceTypes(String name, long id, Set<Out> relays, Set<Out> outs, List<Hint> getterHints, List<Hint> setterHints) {
         this.id = id;
         this.name = name;
         this.setterHints = new ArrayList<>(setterHints);
