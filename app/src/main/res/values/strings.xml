@@ -28,8 +28,8 @@
     <string name="add">Добавить</string>
     <string name="bars">Панели</string>
     <string name="unknown">Неизвестный</string>
-    <string name="new_relay_placeholder">relayPath</string>
-    <string name="new_out_placeholder">outPath</string>
+    <string name="new_relay_placeholder">relay(без /login/device/)</string>
+    <string name="new_out_placeholder">out(без /login/device/)</string>
     <string name="export_error">Возникла ошибка при попытке экспортировать даные</string>
     <string name="import_error">Возникла ошибка при попытке импортировать даные</string>
     <string name="import_ok">Данные успешно импортированы</string>

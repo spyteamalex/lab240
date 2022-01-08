@@ -285,7 +285,7 @@ public class ListActivity extends AppCompatActivity {
         relaysLayout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         relaysLayout.setPadding(
                 relaysLayout.getPaddingLeft(),
-                relaysLayout.getPaddingTop(),
+               0,
                 relaysLayout.getPaddingRight(),
                 0);
 

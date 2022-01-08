@@ -7,6 +7,7 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Pair;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -403,9 +404,46 @@ public class TerminalActivity extends AppCompatActivity {
             setBarsVisible(!areBarsVisible);
             return true;
         }else if(item.getItemId() == R.id.hintsDialog){
-            HintsDialog hd = new HintsDialog(this);
-            hd.setData(type.getGetterHints(), type.getSetterHints(), this::selectHint);
-            hd.create().show();
+            AlertSheetDialog asd = new AlertSheetDialog(this);
+
+            View v = getLayoutInflater().inflate(R.layout.inflate_hints_dialog, asd.getLayout(), false);
+            FlexboxLayout getters = v.findViewById(R.id.getters);
+            FlexboxLayout setters = v.findViewById(R.id.setters);
+
+            TextView gettersLabel = v.findViewById(R.id.getterLabel);
+            TextView settersLabel = v.findViewById(R.id.setterLabel);
+
+            List<Hint> gettersData = type.getGetterHints();
+            List<Hint> settersData = type.getSetterHints();
+
+            getters.removeAllViews();
+            for(Hint g : gettersData){
+                TextView v2 = (TextView) LayoutInflater.from(getters.getContext()).inflate(R.layout.inflate_hint, getters, false);
+                v2.setText(g.getHint());
+                v2.setOnClickListener(b->{
+                    selectHint(g.getCmd());
+                    asd.dismiss();
+                });
+                getters.addView(v2);
+            }
+            getters.setVisibility(gettersData.isEmpty() ? View.GONE : View.VISIBLE);
+            gettersLabel.setVisibility(gettersData.isEmpty() ? View.GONE : View.VISIBLE);
+
+            setters.removeAllViews();
+            for(Hint s : settersData){
+                TextView v2 = (TextView) LayoutInflater.from(setters.getContext()).inflate(R.layout.inflate_hint, getters, false);
+                v2.setText(s.getHint());
+                v2.setOnClickListener(b->{
+                    selectHint(s.getCmd());
+                    asd.dismiss();
+                });
+                setters.addView(v2);
+            }
+            setters.setVisibility(settersData.isEmpty() ? View.GONE : View.VISIBLE);
+            settersLabel.setVisibility(settersData.isEmpty() ? View.GONE : View.VISIBLE);
+
+            asd.addView(v);
+            asd.show(getSupportFragmentManager(), "");
         }
         return super.onOptionsItemSelected(item);
     }

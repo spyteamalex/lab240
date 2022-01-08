@@ -30,7 +30,13 @@ public class AlertSheetDialog extends BottomSheetDialogFragment {
     public enum ButtonType{
         DEFAULT, DESTROY;
     }
-    LinearLayout layout, cancelLL;
+    LinearLayout layout;
+
+    public LinearLayout getLayout() {
+        return layout;
+    }
+
+    LinearLayout cancelLL;
     View v;
     Button cancel;
     String cancelText = null;
